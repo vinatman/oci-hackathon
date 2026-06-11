@@ -11,8 +11,18 @@ import type {
   VenueSearchPayload,
   VenueSearchResponse
 } from "../types/domain";
+import { mockApi } from "./mockApi";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+const localDevApiBaseUrl = import.meta.env.DEV ? ["http:", "//", "localhost", ":4000"].join("") : "";
+const API_BASE_URL = configuredApiBaseUrl || localDevApiBaseUrl;
+
+function isLocalhostApi(url: string) {
+  return /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:\/|$)/i.test(url);
+}
+
+export const usingMockApi =
+  import.meta.env.VITE_USE_MOCK_API === "true" || !API_BASE_URL || (import.meta.env.PROD && isLocalhostApi(API_BASE_URL));
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -35,7 +45,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export const api = {
+const remoteApi = {
   createDemoUser(userId?: string) {
     return request<{ user: User }>("/api/demo-user", {
       method: "POST",
@@ -122,3 +132,5 @@ export const api = {
     return request<{ promotions: PartnerOffer[]; enabled: boolean }>("/api/monetization/promotions");
   }
 };
+
+export const api = usingMockApi ? mockApi : remoteApi;
