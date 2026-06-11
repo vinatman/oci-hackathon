@@ -1,13 +1,13 @@
 import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
-import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { PageHeader } from "../components/PageHeader";
 import { useDemoUser } from "../hooks/useDemoUser";
 import type { SavedVenue } from "../types/domain";
 
-export function SavedVenues() {
+export function SavedVenuesPanel({ showHeader = true }: { showHeader?: boolean }) {
   const { userId } = useDemoUser();
   const [savedVenues, setSavedVenues] = useState<SavedVenue[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,15 +32,26 @@ export function SavedVenues() {
 
   return (
     <>
-      <PageHeader title="Saved spots" eyebrow="Your watch list" />
+      {showHeader ? <PageHeader title="Saved Watch Spots" eyebrow="Your watch list" /> : null}
       {loading ? (
         <LoadingState label="Loading saved spots" />
       ) : savedVenues.length === 0 ? (
-        <EmptyState title="No saved spots yet" message="Save a place from Find a Spot to keep it here." />
+        <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 shadow-soft">
+          <h3 className="text-sm font-semibold text-ink">No saved watch spots yet</h3>
+          <p className="mt-2 max-w-xl text-sm text-slate-600">
+            No saved watch spots yet. Save venues from Venue Finder to build your personal game-day map.
+          </p>
+          <Link
+            to="/venue-finder"
+            className="focus-ring mt-4 inline-flex items-center justify-center rounded-lg bg-action px-4 py-2 text-sm font-semibold text-white"
+          >
+            Find venues
+          </Link>
+        </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {savedVenues.map((saved) => (
-            <article key={saved.id} className="rounded border border-slate-200 bg-white p-4 shadow-soft">
+            <article key={saved.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-soft">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-action">{saved.venue.venueType}</p>
               <h2 className="mt-1 text-lg font-semibold text-ink">{saved.venue.name}</h2>
               <p className="mt-2 text-sm text-slate-600">
@@ -69,4 +80,8 @@ export function SavedVenues() {
       )}
     </>
   );
+}
+
+export function SavedVenues() {
+  return <SavedVenuesPanel />;
 }

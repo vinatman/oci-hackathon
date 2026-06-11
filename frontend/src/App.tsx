@@ -3,10 +3,8 @@ import { AppShell } from "./components/AppShell";
 import { DemoUserProvider } from "./hooks/useDemoUser";
 import { AssistantPage } from "./pages/AssistantPage";
 import { Dashboard } from "./pages/Dashboard";
-import { FavoriteTeams } from "./pages/FavoriteTeams";
 import { Landing } from "./pages/Landing";
-import { Profile } from "./pages/Profile";
-import { SavedVenues } from "./pages/SavedVenues";
+import { Preferences } from "./pages/Preferences";
 import { VenueFinder } from "./pages/VenueFinder";
 
 export default function App() {
@@ -23,21 +21,15 @@ export default function App() {
           }
         />
         <Route
-          path="/profile"
+          path="/preferences"
           element={
             <AppShell>
-              <Profile />
+              <Preferences />
             </AppShell>
           }
         />
-        <Route
-          path="/favorite-teams"
-          element={
-            <AppShell>
-              <FavoriteTeams />
-            </AppShell>
-          }
-        />
+        <Route path="/profile" element={<Navigate to="/preferences?section=profile" replace />} />
+        <Route path="/favorite-teams" element={<Navigate to="/preferences?section=teams" replace />} />
         <Route
           path="/venue-finder"
           element={
@@ -46,14 +38,7 @@ export default function App() {
             </AppShell>
           }
         />
-        <Route
-          path="/saved-venues"
-          element={
-            <AppShell>
-              <SavedVenues />
-            </AppShell>
-          }
-        />
+        <Route path="/saved-venues" element={<Navigate to="/preferences?section=saved" replace />} />
         <Route
           path="/assistant"
           element={

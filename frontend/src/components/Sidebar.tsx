@@ -1,12 +1,10 @@
-import { Bot, Heart, Home, MapPinned, Star, UserCircle } from "lucide-react";
+import { Bot, Home, MapPinned, UserCircle } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const navItems = [
   { to: "/dashboard", label: "Home", mobileLabel: "Home", icon: Home, end: true },
-  { to: "/profile", label: "Preferences", mobileLabel: "Prefs", icon: UserCircle, end: false },
-  { to: "/favorite-teams", label: "Teams", mobileLabel: "Teams", icon: Star, end: false },
+  { to: "/preferences", label: "Preferences", mobileLabel: "Prefs", icon: UserCircle, end: false },
   { to: "/venue-finder", label: "Find a Spot", mobileLabel: "Find", icon: MapPinned, end: false },
-  { to: "/saved-venues", label: "Saved Spots", mobileLabel: "Saved", icon: Heart, end: false },
   { to: "/assistant", label: "Assistant", mobileLabel: "Assistant", icon: Bot, end: false }
 ];
 
@@ -61,7 +59,7 @@ export function Sidebar() {
       </aside>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-12px_28px_rgba(24,33,47,0.12)] backdrop-blur lg:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-6 gap-1">
+        <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (

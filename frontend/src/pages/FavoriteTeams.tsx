@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
-import { EmptyState } from "../components/EmptyState";
 import { LeagueSelector } from "../components/LeagueSelector";
 import { LoadingState } from "../components/LoadingState";
 import { PageHeader } from "../components/PageHeader";
@@ -9,7 +8,7 @@ import { TeamCard } from "../components/TeamCard";
 import { useDemoUser } from "../hooks/useDemoUser";
 import type { FavoriteTeam, Team } from "../types/domain";
 
-export function FavoriteTeams() {
+export function FavoriteTeamsPanel({ showHeader = true }: { showHeader?: boolean }) {
   const { userId, refreshUser } = useDemoUser();
   const [teams, setTeams] = useState<Team[]>([]);
   const [favorites, setFavorites] = useState<FavoriteTeam[]>([]);
@@ -53,8 +52,8 @@ export function FavoriteTeams() {
 
   return (
     <>
-      <PageHeader title="Teams you follow" eyebrow="Personalize the picks" />
-      <section className="mb-6 grid gap-4 rounded border border-slate-200 bg-white p-4 shadow-soft md:grid-cols-3">
+      {showHeader ? <PageHeader title="Teams you follow" eyebrow="Personalize the picks" /> : null}
+      <section className="mb-6 grid gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-soft md:grid-cols-3">
         <SportSelector value={sport} onChange={setSport} />
         <LeagueSelector value={league} onChange={setLeague} />
         <label className="block text-sm font-medium text-ink">
@@ -77,11 +76,23 @@ export function FavoriteTeams() {
             ))}
           </div>
         ) : (
-          <EmptyState title="No teams yet" message="Add a team below to make the game and venue picks feel yours." />
+          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 shadow-soft">
+            <h3 className="text-sm font-semibold text-ink">No favorite teams yet</h3>
+            <p className="mt-2 max-w-xl text-sm text-slate-600">
+              No favorite teams yet. Add teams to get better venue recommendations.
+            </p>
+            <button
+              type="button"
+              onClick={() => document.getElementById("teams-to-add")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              className="focus-ring mt-4 inline-flex items-center justify-center rounded-lg bg-action px-4 py-2 text-sm font-semibold text-white"
+            >
+              Add teams
+            </button>
+          </div>
         )}
       </section>
 
-      <section>
+      <section id="teams-to-add">
         <h2 className="mb-3 text-lg font-semibold text-ink">Teams to add</h2>
         {loading ? (
           <LoadingState label="Loading teams" />
@@ -95,4 +106,8 @@ export function FavoriteTeams() {
       </section>
     </>
   );
+}
+
+export function FavoriteTeams() {
+  return <FavoriteTeamsPanel />;
 }

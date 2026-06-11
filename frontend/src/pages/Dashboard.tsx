@@ -95,7 +95,7 @@ export function Dashboard() {
                   <ArrowRight className="h-4 w-4" aria-hidden />
                 </Link>
                 <Link
-                  to="/profile"
+                  to="/preferences"
                   className="focus-ring inline-flex items-center rounded-lg border border-white/30 px-4 py-2 text-sm font-semibold text-white"
                 >
                   Tune preferences
