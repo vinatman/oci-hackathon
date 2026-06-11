@@ -2,7 +2,7 @@ import { Bot, Heart, Home, MapPinned, Star, UserCircle } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const navItems = [
-  { to: "/", label: "Home", mobileLabel: "Home", icon: Home, end: true },
+  { to: "/dashboard", label: "Home", mobileLabel: "Home", icon: Home, end: true },
   { to: "/profile", label: "Preferences", mobileLabel: "Prefs", icon: UserCircle, end: false },
   { to: "/favorite-teams", label: "Teams", mobileLabel: "Teams", icon: Star, end: false },
   { to: "/venue-finder", label: "Find a Spot", mobileLabel: "Find", icon: MapPinned, end: false },

@@ -4,6 +4,7 @@ import { DemoUserProvider } from "./hooks/useDemoUser";
 import { AssistantPage } from "./pages/AssistantPage";
 import { Dashboard } from "./pages/Dashboard";
 import { FavoriteTeams } from "./pages/FavoriteTeams";
+import { Landing } from "./pages/Landing";
 import { Profile } from "./pages/Profile";
 import { SavedVenues } from "./pages/SavedVenues";
 import { VenueFinder } from "./pages/VenueFinder";
@@ -12,15 +13,15 @@ export default function App() {
   return (
     <DemoUserProvider>
       <Routes>
+        <Route path="/" element={<Landing />} />
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <AppShell>
               <Dashboard />
             </AppShell>
           }
         />
-        <Route path="/dashboard" element={<Navigate to="/" replace />} />
         <Route
           path="/profile"
           element={
