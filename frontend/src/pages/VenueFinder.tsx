@@ -9,7 +9,7 @@ import { GameDayExtras } from "../components/GameDayExtras";
 import { GameCard } from "../components/GameCard";
 import { LeagueSelector } from "../components/LeagueSelector";
 import { LoadingState } from "../components/LoadingState";
-import { LocationPicker } from "../components/LocationPicker";
+import { LocationPicker, type LocationState } from "../components/LocationPicker";
 import { PageHeader } from "../components/PageHeader";
 import { PremiumBadge } from "../components/PremiumBadge";
 import { RadiusSelector } from "../components/RadiusSelector";
@@ -29,14 +29,6 @@ import {
 } from "../utils/resultsViewMode";
 import { formatGameLabel } from "../utils/format";
 
-interface LocationState {
-  mode: "current" | "manual";
-  city: string;
-  latitude?: number;
-  longitude?: number;
-  status: string;
-}
-
 export function VenueFinder() {
   const { user, userId } = useDemoUser();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -50,11 +42,14 @@ export function VenueFinder() {
   const [location, setLocation] = useState<LocationState>({
     mode: "manual",
     city: "Los Angeles",
-    status: "Choose current location or a supported city."
+    locationSource: "demo",
+    status: "Use current location or enter a city manually.",
+    statusKind: "idle"
   });
   const [results, setResults] = useState<VenueSearchResponse>();
   const [viewMode, setViewMode] = useState<ResultsViewMode>(() => getStoredResultsViewMode());
   const [loading, setLoading] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
@@ -79,7 +74,9 @@ export function VenueFinder() {
     setLocation((current) => ({
       ...current,
       city: user.homeCity ?? "Los Angeles",
-      status: user.homeCity ? "Home city loaded from profile." : current.status
+      locationSource: user.homeCity ? "profile" : current.locationSource,
+      status: user.homeCity ? "Home city loaded from profile." : current.status,
+      statusKind: "idle"
     }));
   }, [user]);
 
@@ -91,30 +88,6 @@ export function VenueFinder() {
       setInitialLoading(false);
     };
     void load();
-  }, []);
-
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation((current) => ({
-          ...current,
-          mode: "current",
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          status: "Current location ready."
-        }));
-      },
-      () => {
-        setLocation((current) => ({
-          ...current,
-          status: current.city ? "Using selected city. Current location was not available." : current.status
-        }));
-      },
-      { enableHighAccuracy: false, timeout: 3500 }
-    );
   }, []);
 
   useEffect(() => {
@@ -154,6 +127,115 @@ export function VenueFinder() {
     longitude: location.mode === "current" ? location.longitude : undefined,
     venueTypes,
     radiusKm
+  };
+
+  const getBrowserPosition = () =>
+    new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      });
+    });
+
+  const detectCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      setLocation((current) => ({
+        ...current,
+        mode: "manual",
+        latitude: undefined,
+        longitude: undefined,
+        locationSource: "manual",
+        status: "Your browser does not support location detection. Please enter a city manually.",
+        statusKind: "error"
+      }));
+      return;
+    }
+
+    setDetectingLocation(true);
+    setError("");
+    setLocation((current) => ({
+      ...current,
+      mode: "current",
+      latitude: undefined,
+      longitude: undefined,
+      city: "",
+      region: undefined,
+      country: undefined,
+      displayName: undefined,
+      locationSource: "browser",
+      status: "Detecting your location...",
+      statusKind: "loading"
+    }));
+
+    try {
+      const position = await getBrowserPosition();
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      setLocation((current) => ({
+        ...current,
+        mode: "current",
+        city: "",
+        region: undefined,
+        country: undefined,
+        displayName: undefined,
+        latitude,
+        longitude,
+        locationSource: "browser",
+        status: "Location detected. Looking up a nearby city...",
+        statusKind: "loading"
+      }));
+
+      try {
+        const reverse = await api.reverseLocation(latitude, longitude);
+        const cityLabel = [reverse.city, reverse.state].filter(Boolean).join(", ");
+        setLocation({
+          mode: "current",
+          city: reverse.city ?? "",
+          region: reverse.state,
+          country: reverse.country,
+          displayName: reverse.displayName,
+          latitude,
+          longitude,
+          locationSource: "browser",
+          status: cityLabel
+            ? `Location detected: ${cityLabel}.`
+            : `Location detected. Reverse geocoding failed, but coordinates are available.`,
+          statusKind: "success"
+        });
+      } catch {
+        setLocation({
+          mode: "current",
+          city: "",
+          latitude,
+          longitude,
+          locationSource: "browser",
+          status: "Location detected. Reverse geocoding failed, but coordinates are available.",
+          statusKind: "success"
+        });
+      }
+    } catch (err) {
+      const geolocationError = err as GeolocationPositionError;
+      const status =
+        geolocationError.code === geolocationError.PERMISSION_DENIED
+          ? "Location permission was denied. You can still enter a city manually."
+          : geolocationError.code === geolocationError.TIMEOUT
+            ? "We could not detect your location quickly enough. Try again or enter a city manually."
+            : "Location unavailable. Try again or enter a city manually.";
+
+      setLocation((current) => ({
+        ...current,
+        mode: "manual",
+        latitude: undefined,
+        longitude: undefined,
+        locationSource: current.city ? current.locationSource : "manual",
+        status,
+        statusKind: "error"
+      }));
+    } finally {
+      setDetectingLocation(false);
+    }
   };
 
   const search = async () => {
@@ -229,7 +311,14 @@ export function VenueFinder() {
           </select>
         </label>
 
-        <LocationPicker value={location} onChange={setLocation} />
+        <LocationPicker
+          value={location}
+          onChange={setLocation}
+          detecting={detectingLocation}
+          onUseCurrentLocation={() => void detectCurrentLocation()}
+          onSearchWithLocation={() => void search()}
+          searchDisabled={loading || detectingLocation}
+        />
         <VenueTypeSelector values={venueTypes} onChange={setVenueTypes} />
         <RadiusSelector value={radiusKm} onChange={setRadiusKm} />
 
@@ -250,7 +339,7 @@ export function VenueFinder() {
       {loading ? <LoadingState label="Ranking venues" /> : null}
 
       {!results && !loading ? (
-        <EmptyState title="Ready to search" message="Choose a game, city or current location, venue type, then find venues." />
+        <EmptyState title="Ready to search" message="Choose a game, use current location or enter a city, pick a venue type, then find venues." />
       ) : null}
 
       {results ? (

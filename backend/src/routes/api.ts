@@ -5,6 +5,7 @@ import { prisma } from "../data/prisma.js";
 import { MockAdProvider, MockBettingProvider, MockPartnerOfferProvider, MockTicketProvider } from "../providers/mockProviders.js";
 import { buildAgentCards } from "../services/agentService.js";
 import { getOrCreateDemoUser } from "../services/demoUserService.js";
+import { reverseGeocodeLocation } from "../services/locationService.js";
 import { findVenueMatches, searchVenues } from "../services/venueSearchService.js";
 import { assistantMessageSchema, profileUpdateSchema, venueSearchSchema } from "../services/validation.js";
 import { handleAssistantMessage } from "../services/assistantService.js";
@@ -198,6 +199,21 @@ router.get(
       take: 12
     });
     res.json({ games });
+  })
+);
+
+router.get(
+  "/location/reverse",
+  asyncHandler(async (req, res) => {
+    const query = z
+      .object({
+        lat: z.coerce.number().min(-90).max(90),
+        lng: z.coerce.number().min(-180).max(180)
+      })
+      .parse(req.query);
+
+    const location = await reverseGeocodeLocation(query.lat, query.lng);
+    res.json(location);
   })
 );
 

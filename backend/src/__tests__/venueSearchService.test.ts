@@ -27,4 +27,23 @@ describe("venue search preference defaults", () => {
       venueTypes: ["Pub", "Watch party"]
     });
   });
+
+  it("does not apply the home city when browser coordinates are present", () => {
+    const input = applyProfilePreferenceDefaults(
+      {
+        homeCity: "Los Angeles",
+        profile: {
+          preferredSports: [],
+          preferredLeagues: [],
+          preferredVenueTypes: ["Sports bar"]
+        },
+        favoriteTeams: []
+      },
+      { latitude: 37.7749, longitude: -122.4194, venueTypes: [], radiusKm: 40 }
+    );
+
+    expect(input.city).toBeUndefined();
+    expect(input.latitude).toBe(37.7749);
+    expect(input.longitude).toBe(-122.4194);
+  });
 });

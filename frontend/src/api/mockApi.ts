@@ -6,6 +6,7 @@ import type {
   Game,
   PartnerOffer,
   RankedVenue,
+  ReverseLocationResult,
   SavedVenue,
   Team,
   TicketOffer,
@@ -640,6 +641,41 @@ function selectedLocation(input: VenueSearchPayload) {
   return city ? cityCenters[city] : undefined;
 }
 
+function reverseDemoLocation(latitude: number, longitude: number): ReverseLocationResult {
+  const cityState: Record<string, string> = {
+    "New York": "NY",
+    "San Francisco": "CA",
+    "Los Angeles": "CA",
+    Chicago: "IL",
+    Dallas: "TX",
+    Boston: "MA",
+    Seattle: "WA",
+    "Las Vegas": "NV"
+  };
+  const nearest = Object.entries(cityCenters)
+    .map(([cityKey, center]) => ({
+      cityKey,
+      center,
+      distanceKm: haversineKm({ latitude, longitude }, center)
+    }))
+    .sort((a, b) => a.distanceKm - b.distanceKm)[0];
+
+  if (!nearest || nearest.distanceKm > 75) {
+    return { latitude, longitude };
+  }
+
+  const city = nearest.cityKey.replace(/\b\w/g, (letter) => letter.toUpperCase());
+  const state = cityState[city];
+  return {
+    city,
+    state,
+    country: "USA",
+    displayName: state ? `${city}, ${state}` : city,
+    latitude,
+    longitude
+  };
+}
+
 function haversineKm(from: { latitude: number; longitude: number }, to: { latitude: number; longitude: number }) {
   const earthRadiusKm = 6371;
   const dLat = degreesToRadians(to.latitude - from.latitude);
@@ -863,6 +899,7 @@ function formatGameLabel(game: Game) {
 }
 
 function applyProfileDefaults(user: User, input: VenueSearchPayload): VenueSearchPayload {
+  const hasBrowserCoordinates = typeof input.latitude === "number" && typeof input.longitude === "number";
   const preferredSport = input.sport ?? user.profile?.preferredSports[0];
   const preferredLeague = input.league ?? user.profile?.preferredLeagues[0];
   const matchingFavoriteTeam = user.favoriteTeams?.find(({ team }) => {
@@ -877,7 +914,7 @@ function applyProfileDefaults(user: User, input: VenueSearchPayload): VenueSearc
     sport: preferredSport ?? favoriteTeam?.sport,
     league: preferredLeague ?? favoriteTeam?.league,
     teamId: input.teamId ?? favoriteTeam?.id,
-    city: input.city ?? user.homeCity ?? undefined,
+    city: hasBrowserCoordinates ? undefined : input.city ?? user.homeCity ?? undefined,
     venueTypes:
       input.venueTypes.length > 0
         ? input.venueTypes
@@ -1213,6 +1250,9 @@ export const mockApi = {
   },
   async getUpcomingGames(params: { sport?: string; league?: string; teamId?: string } = {}) {
     return { games: clone(filterGames({ ...params, venueTypes: [], radiusKm: 40 })) };
+  },
+  async reverseLocation(latitude: number, longitude: number) {
+    return clone(reverseDemoLocation(latitude, longitude));
   },
   async searchVenues(userId: string, payload: VenueSearchPayload) {
     const state = loadState();

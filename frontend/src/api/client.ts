@@ -5,6 +5,7 @@ import type {
   FavoriteTeam,
   Game,
   PartnerOffer,
+  ReverseLocationResult,
   SavedVenue,
   Team,
   User,
@@ -84,6 +85,10 @@ const remoteApi = {
     const search = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => value && search.set(key, value));
     return request<{ games: Game[] }>(`/api/games/upcoming${search.size ? `?${search}` : ""}`);
+  },
+  reverseLocation(latitude: number, longitude: number) {
+    const search = new URLSearchParams({ lat: String(latitude), lng: String(longitude) });
+    return request<ReverseLocationResult>(`/api/location/reverse?${search}`);
   },
   searchVenues(userId: string, payload: VenueSearchPayload) {
     return request<VenueSearchResponse>(`/api/users/${userId}/venues/search`, {

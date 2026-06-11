@@ -155,6 +155,15 @@ export interface VenueSearchPayload {
   query?: string;
 }
 
+export interface ReverseLocationResult {
+  city?: string;
+  state?: string;
+  country?: string;
+  displayName?: string;
+  latitude: number;
+  longitude: number;
+}
+
 export interface VenueSearchResponse {
   games: Game[];
   venues: RankedVenue[];

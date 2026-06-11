@@ -60,6 +60,7 @@ function relevantAffinity(venue: VenueWithAffinity, teamId?: string) {
 }
 
 export function applyProfilePreferenceDefaults(user: PreferenceSource, input: VenueSearchInput): VenueSearchInput {
+  const hasBrowserCoordinates = typeof input.latitude === "number" && typeof input.longitude === "number";
   const preferredSport = input.sport ?? user.profile?.preferredSports[0];
   const preferredLeague = input.league ?? user.profile?.preferredLeagues[0];
   const matchingFavoriteTeam = user.favoriteTeams?.find(({ team }) => {
@@ -74,7 +75,7 @@ export function applyProfilePreferenceDefaults(user: PreferenceSource, input: Ve
     sport: preferredSport ?? favoriteTeam?.sport,
     league: preferredLeague ?? favoriteTeam?.league,
     teamId: input.teamId ?? favoriteTeam?.id,
-    city: input.city ?? user.homeCity ?? undefined,
+    city: hasBrowserCoordinates ? undefined : input.city ?? user.homeCity ?? undefined,
     venueTypes:
       input.venueTypes.length > 0
         ? input.venueTypes
