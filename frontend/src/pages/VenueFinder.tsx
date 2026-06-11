@@ -209,7 +209,7 @@ export function VenueFinder() {
         <PremiumBadge active={user.isPremium} />
       </PageHeader>
 
-      <section className="mb-6 grid gap-5 rounded border border-slate-200 bg-white p-4 shadow-soft">
+      <section className="app-card mb-6 grid gap-5 p-4 sm:p-5">
         <div className="grid gap-4 md:grid-cols-3">
           <SportSelector value={sport} onChange={setSport} />
           <LeagueSelector value={league} onChange={setLeague} />
@@ -221,7 +221,7 @@ export function VenueFinder() {
           <select
             value={gameId}
             onChange={(event) => setGameId(event.target.value)}
-            className="focus-ring mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="focus-ring mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
           >
             <option value="">Best matching upcoming game</option>
             {filteredGames.map((game) => (
@@ -240,7 +240,7 @@ export function VenueFinder() {
           type="button"
           onClick={() => void search()}
           disabled={loading}
-          className="focus-ring inline-flex w-fit items-center gap-2 rounded bg-action px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="focus-ring inline-flex w-full items-center justify-center gap-2 rounded-lg bg-action px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:w-fit"
         >
           <Search className="h-4 w-4" aria-hidden />
           {loading ? "Finding Venues" : "Find Venues"}
@@ -261,7 +261,7 @@ export function VenueFinder() {
           <section>
             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-ink">Upcoming games</h2>
+                <h2 className="section-heading">Upcoming games</h2>
                 <p className="text-sm text-slate-600">Matched to your sport, league, and team filters.</p>
               </div>
             </div>
@@ -282,7 +282,7 @@ export function VenueFinder() {
           <section>
             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-ink">Recommended venues</h2>
+                <h2 className="section-heading">Recommended venues</h2>
                 <p className="text-sm text-slate-600">
                   Ranked by venue type, location, distance, team affinity, and fan evidence.
                 </p>

@@ -50,7 +50,7 @@ export function LocationPicker({
         <button
           type="button"
           onClick={useCurrentLocation}
-          className="focus-ring inline-flex items-center gap-2 rounded bg-action px-3 py-2 text-sm font-semibold text-white"
+          className="focus-ring inline-flex w-full items-center justify-center gap-2 rounded-lg bg-action px-3 py-2 text-sm font-semibold text-white sm:w-auto"
         >
           <LocateFixed className="h-4 w-4" aria-hidden />
           Current location
@@ -68,7 +68,7 @@ export function LocationPicker({
               longitude: undefined
             })
           }
-          className="focus-ring min-w-[220px] rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+          className="focus-ring min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm sm:min-w-[220px]"
         >
           <option value="">Manual city</option>
           {DEMO_CITIES.map((city) => (

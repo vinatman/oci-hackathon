@@ -2,7 +2,7 @@ export function RadiusSelector({ value, onChange }: { value: number; onChange: (
   return (
     <label className="block text-sm font-medium text-ink">
       Radius
-      <div className="mt-1 flex items-center gap-3 rounded border border-slate-300 bg-white px-3 py-2">
+      <div className="mt-1 flex items-center gap-3 rounded-lg border border-slate-300 bg-white px-3 py-2">
         <input
           type="range"
           min="5"

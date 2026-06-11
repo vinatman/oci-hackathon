@@ -56,13 +56,13 @@ export function ProfileForm({
         void onSubmit(form);
       }}
     >
-      <div className="grid gap-4 rounded border border-slate-200 bg-white p-4 shadow-soft md:grid-cols-2">
+      <div className="app-card grid gap-4 p-4 md:grid-cols-2">
         <label className="block text-sm font-medium text-ink">
           Display name
           <input
             value={form.displayName}
             onChange={(event) => setForm({ ...form, displayName: event.target.value })}
-            className="focus-ring mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm"
+            className="focus-ring mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </label>
         <label className="block text-sm font-medium text-ink">
@@ -70,10 +70,10 @@ export function ProfileForm({
           <input
             value={form.homeCity}
             onChange={(event) => setForm({ ...form, homeCity: event.target.value })}
-            className="focus-ring mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm"
+            className="focus-ring mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </label>
-        <label className="flex items-center gap-3 rounded border border-slate-200 bg-field px-3 py-3 text-sm font-medium text-ink">
+        <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-field px-3 py-3 text-sm font-medium text-ink">
           <input
             type="checkbox"
             checked={form.travelModeEnabled}
@@ -82,7 +82,7 @@ export function ProfileForm({
           />
           Travel mode enabled
         </label>
-        <label className="flex items-center gap-3 rounded border border-amberline/30 bg-amberline/10 px-3 py-3 text-sm font-medium text-amber-900">
+        <label className="flex items-center gap-3 rounded-lg border border-amberline/30 bg-amberline/10 px-3 py-3 text-sm font-medium text-amber-900">
           <input
             type="checkbox"
             checked={form.isPremium}
@@ -115,7 +115,7 @@ export function ProfileForm({
       <button
         type="submit"
         disabled={saving}
-        className="focus-ring inline-flex w-fit items-center gap-2 rounded bg-action px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        className="focus-ring inline-flex w-full items-center justify-center gap-2 rounded-lg bg-action px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:w-fit"
       >
         <Save className="h-4 w-4" aria-hidden />
         {saving ? "Saving" : "Save profile"}
@@ -136,14 +136,14 @@ function PreferenceGroup({
   onToggle: (value: string) => void;
 }) {
   return (
-    <fieldset className="rounded border border-slate-200 bg-white p-4 shadow-soft">
+    <fieldset className="app-card p-4">
       <legend className="px-1 text-sm font-semibold text-ink">{title}</legend>
       <div className="mt-3 flex flex-wrap gap-2">
         {values.map((value) => (
           <label
             key={value}
             className={[
-              "flex items-center gap-2 rounded border px-3 py-2 text-sm",
+              "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm",
               selected.includes(value) ? "border-action bg-action/10 text-ink" : "border-slate-200 bg-field text-slate-700"
             ].join(" ")}
           >

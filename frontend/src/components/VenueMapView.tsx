@@ -40,7 +40,7 @@ export function VenueMapView({
     : [firstVenue.latitude, firstVenue.longitude];
 
   return (
-    <div className="h-[520px] overflow-hidden rounded border border-slate-200 bg-white shadow-soft">
+    <div className="app-card h-[70vh] min-h-[360px] max-h-[560px] overflow-hidden">
       <MapContainer center={center} zoom={12} scrollWheelZoom className="h-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

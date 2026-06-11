@@ -7,7 +7,7 @@ export function PartnerPromotionWidget({ offers }: { offers: PartnerOffer[] }) {
   }
 
   return (
-    <section className="rounded border border-slate-200 bg-white p-4 shadow-soft">
+    <section className="app-card p-4">
       <div className="flex items-center gap-2">
         <Handshake className="h-5 w-5 text-action" aria-hidden />
         <h2 className="text-base font-semibold text-ink">Partner Promotions</h2>
@@ -17,7 +17,7 @@ export function PartnerPromotionWidget({ offers }: { offers: PartnerOffer[] }) {
           <a
             key={offer.id}
             href={offer.targetUrl ?? "#"}
-            className="focus-ring rounded border border-slate-200 bg-field p-3 text-sm hover:bg-white"
+            className="focus-ring rounded-lg border border-slate-200 bg-field p-3 text-sm transition hover:border-action/30 hover:bg-white"
           >
             <strong className="block text-ink">{offer.title}</strong>
             <span className="mt-1 block text-slate-600">{offer.description}</span>

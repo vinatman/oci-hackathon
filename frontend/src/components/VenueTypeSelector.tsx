@@ -10,7 +10,7 @@ export function VenueTypeSelector({ values, onChange }: { values: string[]; onCh
       <legend className="text-sm font-medium text-ink">Venue types</legend>
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         {VENUE_TYPES.map((venueType) => (
-          <label key={venueType} className="flex items-center gap-2 rounded border border-slate-200 bg-white px-3 py-2 text-sm">
+          <label key={venueType} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
             <input
               type="checkbox"
               checked={values.includes(venueType)}
