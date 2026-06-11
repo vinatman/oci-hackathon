@@ -132,20 +132,20 @@ function Hero() {
         <div className="hidden lg:block" aria-hidden>
           <div className="rounded-lg border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur">
             <div className="rounded-lg bg-white p-4 text-ink">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-action">Los Angeles</p>
-                  <h2 className="mt-1 text-lg font-semibold">Lakers watch plan</h2>
+              <FanFitCard />
+              <div className="mt-4 rounded-lg border border-slate-200 bg-field p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-action">Los Angeles</p>
+                    <h2 className="mt-1 text-lg font-semibold">Lakers watch plan</h2>
+                  </div>
+                  <span className="rounded-lg bg-action/10 px-3 py-2 text-sm font-semibold text-action">92%</span>
                 </div>
-                <span className="rounded-lg bg-action/10 px-3 py-2 text-sm font-semibold text-action">92%</span>
-              </div>
-              <div className="mt-4 grid gap-3">
-                <PreviewCard title="Tom's Watch Bar" meta="Sports bar · 1.8 km" score="93%" />
-                <PreviewCard title="33 Taps Silver Lake" meta="Restaurant · LAFC and Lakers screens" score="84%" />
-                <PreviewCard title="LA Fan Club House" meta="Fan club · saved by travelers" score="78%" />
-              </div>
-              <div className="mt-4">
-                <FanFitCard />
+                <div className="mt-4 grid gap-3">
+                  <PreviewCard title="Tom's Watch Bar" meta="Sports bar · 1.8 km" score="93%" />
+                  <PreviewCard title="33 Taps Silver Lake" meta="Restaurant · LAFC and Lakers screens" score="84%" />
+                  <PreviewCard title="LA Fan Club House" meta="Fan club · saved by travelers" score="78%" />
+                </div>
               </div>
             </div>
           </div>
