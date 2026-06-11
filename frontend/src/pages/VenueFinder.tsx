@@ -1,24 +1,21 @@
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
-import { AdvertisingWidget } from "../components/AdvertisingWidget";
 import { AgentRecommendationSidebar } from "../components/AgentRecommendationSidebar";
 import { AssistantChatPanel } from "../components/AssistantChatPanel";
-import { BettingWidget } from "../components/BettingWidget";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorState } from "../components/ErrorState";
+import { GameDayExtras } from "../components/GameDayExtras";
 import { GameCard } from "../components/GameCard";
 import { LeagueSelector } from "../components/LeagueSelector";
 import { LoadingState } from "../components/LoadingState";
 import { LocationPicker } from "../components/LocationPicker";
 import { PageHeader } from "../components/PageHeader";
-import { PartnerPromotionWidget } from "../components/PartnerPromotionWidget";
 import { PremiumBadge } from "../components/PremiumBadge";
 import { RadiusSelector } from "../components/RadiusSelector";
 import { ResultsViewToggle } from "../components/ResultsViewToggle";
 import { SportSelector } from "../components/SportSelector";
 import { TeamSelector } from "../components/TeamSelector";
-import { TicketWidget } from "../components/TicketWidget";
 import { VenueListView } from "../components/VenueListView";
 import { VenueMapView } from "../components/VenueMapView";
 import { VenueTypeSelector } from "../components/VenueTypeSelector";
@@ -205,7 +202,7 @@ export function VenueFinder() {
 
   return (
     <>
-      <PageHeader title="Venue Finder" eyebrow="Find your game">
+      <PageHeader title="Let's find your spot" eyebrow={`Hey ${user.displayName}!`}>
         <PremiumBadge active={user.isPremium} />
       </PageHeader>
 
@@ -261,8 +258,8 @@ export function VenueFinder() {
           <section>
             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="section-heading">Upcoming games</h2>
-                <p className="text-sm text-slate-600">Matched to your sport, league, and team filters.</p>
+                <h2 className="section-heading">Games you can catch</h2>
+                <p className="text-sm text-slate-600">A quick look at the matchups behind this search.</p>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -272,19 +269,14 @@ export function VenueFinder() {
             </div>
           </section>
 
-          <section className="grid gap-4 lg:grid-cols-4">
-            <TicketWidget offers={results.monetization.tickets} />
-            <BettingWidget widget={results.monetization.betting} />
-            <AdvertisingWidget ads={results.monetization.ads} premium={user.isPremium} />
-            <PartnerPromotionWidget offers={results.monetization.promotions} />
-          </section>
+          <GameDayExtras monetization={results.monetization} premium={user.isPremium} />
 
           <section>
             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="section-heading">Recommended venues</h2>
+                <h2 className="section-heading">Places that fit</h2>
                 <p className="text-sm text-slate-600">
-                  Ranked by venue type, location, distance, team affinity, and fan evidence.
+                  Ranked by game fit, location, screens, fan signals, and the atmosphere you picked.
                 </p>
               </div>
               <ResultsViewToggle value={viewMode} onChange={changeViewMode} mapAvailable={results.mapAvailable} />

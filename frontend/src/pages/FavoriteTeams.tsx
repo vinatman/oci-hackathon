@@ -53,7 +53,7 @@ export function FavoriteTeams() {
 
   return (
     <>
-      <PageHeader title="Favorite Teams" eyebrow="Team preferences" />
+      <PageHeader title="Teams you follow" eyebrow="Personalize the picks" />
       <section className="mb-6 grid gap-4 rounded border border-slate-200 bg-white p-4 shadow-soft md:grid-cols-3">
         <SportSelector value={sport} onChange={setSport} />
         <LeagueSelector value={league} onChange={setLeague} />
@@ -69,7 +69,7 @@ export function FavoriteTeams() {
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold text-ink">Selected teams</h2>
+        <h2 className="mb-3 text-lg font-semibold text-ink">Your teams</h2>
         {selectedTeams.length ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {selectedTeams.map((team) => (
@@ -77,12 +77,12 @@ export function FavoriteTeams() {
             ))}
           </div>
         ) : (
-          <EmptyState title="No favorites yet" message="Add a team below to personalize venue recommendations." />
+          <EmptyState title="No teams yet" message="Add a team below to make the game and venue picks feel yours." />
         )}
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold text-ink">Available teams</h2>
+        <h2 className="mb-3 text-lg font-semibold text-ink">Teams to add</h2>
         {loading ? (
           <LoadingState label="Loading teams" />
         ) : (

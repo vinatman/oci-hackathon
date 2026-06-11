@@ -318,7 +318,7 @@ const adPlacements = [
   {
     placementKey: "local-rideshare",
     title: "Ride to the watch party",
-    description: "Mock rideshare credit for fans heading to nearby venues.",
+    description: "A rideshare credit for fans heading to nearby venues.",
     advertiserName: "RideLoop",
     targetUrl: "https://example.com/rideloop"
   },
@@ -332,7 +332,7 @@ const adPlacements = [
   {
     placementKey: "streaming-trial",
     title: "Backup streaming option",
-    description: "Mock streaming partner for games not shown nearby.",
+    description: "A streaming backup for games that are harder to find nearby.",
     advertiserName: "StreamDeck Sports",
     targetUrl: "https://example.com/streamdeck"
   },
@@ -349,28 +349,28 @@ const partnerOffers = [
   {
     partnerType: "food",
     title: "Two-for-one wings",
-    description: "Mock local food deal available near top sports bars.",
+    description: "A local food deal available near top sports bars.",
     ctaLabel: "View food deal",
     targetUrl: "https://example.com/food"
   },
   {
     partnerType: "rideshare",
-    title: "Fan ride placeholder",
-    description: "Future rideshare integration for traveling fans.",
+    title: "Fan ride option",
+    description: "Plan an easy ride to the watch party.",
     ctaLabel: "Plan ride",
     targetUrl: "https://example.com/rides"
   },
   {
     partnerType: "merchandise",
     title: "Team scarf bundle",
-    description: "Mock merchandise offer for favorite team supporters.",
+    description: "Team-color gear for favorite team supporters.",
     ctaLabel: "Shop merch",
     targetUrl: "https://example.com/merch"
   },
   {
     partnerType: "streaming",
     title: "Streaming backup",
-    description: "Fallback streaming partner placeholder when venues are full.",
+    description: "A backup option when nearby venues are full.",
     ctaLabel: "See options",
     targetUrl: "https://example.com/streaming"
   },

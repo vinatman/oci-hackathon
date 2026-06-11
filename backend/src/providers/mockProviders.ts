@@ -85,31 +85,31 @@ export class MockTicketProvider implements TicketProvider {
     const templates = [
       {
         title: "Fan ticket marketplace",
-        description: "Mock ticket marketplace listing for the selected game.",
+        description: "Browse available seats for the selected game.",
         ctaLabel: "Find tickets",
         targetUrl: "https://example.com/tickets/marketplace"
       },
       {
         title: "Upper bowl value seats",
-        description: "Sample value-seat option for fans who want to attend instead of watch nearby.",
+        description: "A value-seat option for fans who want to attend instead of watch nearby.",
         ctaLabel: "Find tickets",
         targetUrl: "https://example.com/tickets/value"
       },
       {
         title: "Lower bowl upgrade",
-        description: "Mock premium-seat offer attached to the selected upcoming game.",
+        description: "Premium-seat option attached to the selected upcoming game.",
         ctaLabel: "Find tickets",
         targetUrl: "https://example.com/tickets/lower-bowl"
       },
       {
         title: "Family section option",
-        description: "Sample family-friendly ticket block for traveling supporters.",
+        description: "A family-friendly ticket block for traveling supporters.",
         ctaLabel: "Find tickets",
         targetUrl: "https://example.com/tickets/family"
       },
       {
         title: "Last-minute fan pass",
-        description: "Mock last-minute ticket option for game-day decisions.",
+        description: "Last-minute ticket option for game-day decisions.",
         ctaLabel: "Find tickets",
         targetUrl: "https://example.com/tickets/last-minute"
       }
@@ -139,10 +139,10 @@ export class MockBettingProvider implements BettingProvider {
   async getWidget(enabled: boolean) {
     return {
       enabled,
-      title: enabled ? "Betting partner placeholder" : "Betting partner disabled",
+      title: enabled ? "Responsible gaming information" : "Responsible gaming unavailable",
       description: enabled
-        ? "Sample responsible gaming partner module. No odds, advice, or wagering is available."
-        : "Betting is disabled by default for the MVP.",
+        ? "Responsible gaming partner information. No odds, advice, or wagering is available."
+        : "Responsible gaming modules are unavailable in this demo.",
       disclaimer:
         "Responsible gaming: this MVP does not provide betting advice, odds, deposits, or real-money wagering."
     };

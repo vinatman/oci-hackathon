@@ -2,15 +2,12 @@ import { useEffect, useState } from "react";
 import { ArrowRight, MapPin, ShieldCheck, Star, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
-import { AdvertisingWidget } from "../components/AdvertisingWidget";
 import { AgentRecommendationSidebar } from "../components/AgentRecommendationSidebar";
-import { BettingWidget } from "../components/BettingWidget";
+import { GameDayExtras } from "../components/GameDayExtras";
 import { GameCard } from "../components/GameCard";
 import { LoadingState } from "../components/LoadingState";
 import { PageHeader } from "../components/PageHeader";
-import { PartnerPromotionWidget } from "../components/PartnerPromotionWidget";
 import { PremiumBadge } from "../components/PremiumBadge";
-import { TicketWidget } from "../components/TicketWidget";
 import { VenueCard } from "../components/VenueCard";
 import { useDemoUser } from "../hooks/useDemoUser";
 import type { AgentCard, Game, RankedVenue, VenueSearchResponse } from "../types/domain";
@@ -72,7 +69,7 @@ export function Dashboard() {
 
   return (
     <>
-      <PageHeader title="Dashboard" eyebrow="Game-day overview">
+      <PageHeader title={`Hey ${user.displayName}!`} eyebrow="Find your game, wherever you are.">
         <PremiumBadge active={user.isPremium} />
       </PageHeader>
 
@@ -80,14 +77,14 @@ export function Dashboard() {
         <div className="grid gap-6">
           <section className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.9fr)]">
             <div className="rounded-lg bg-ink p-5 text-white shadow-soft sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-200">Current watch plan</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-200">Your next watch plan</p>
               <h2 className="mt-3 text-2xl font-semibold sm:text-3xl">
-                {user.homeCity ? `Ready for ${user.homeCity}` : "Ready for your next game"}
+                {user.homeCity ? `A few strong spots around ${user.homeCity}` : "A few strong spots for your next game"}
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200">
                 {favoriteTeams.length
-                  ? `Tracking ${favoriteTeams.slice(0, 2).join(", ")}${favoriteTeams.length > 2 ? " and more" : ""}.`
-                  : "Add favorite teams to tune game and venue recommendations."}
+                  ? `We tuned this around ${favoriteTeams.slice(0, 2).join(", ")}${favoriteTeams.length > 2 ? " and more" : ""}, your venue style, and where you are likely to watch.`
+                  : "Add favorite teams to make the venue and game picks feel more personal."}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link
@@ -101,16 +98,16 @@ export function Dashboard() {
                   to="/profile"
                   className="focus-ring inline-flex items-center rounded-lg border border-white/30 px-4 py-2 text-sm font-semibold text-white"
                 >
-                  Tune profile
+                  Tune preferences
                 </Link>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <SummaryTile icon={Trophy} label="Profile" value={user.displayName} detail={user.homeCity ?? "No home city"} />
+              <SummaryTile icon={Trophy} label="For you" value={user.homeCity ?? "On the road"} detail={favoriteTeams[0] ?? "Pick a team"} />
               <SummaryTile
                 icon={Star}
-                label="Favorites"
+                label="Teams"
                 value={String(favoriteTeams.length)}
                 detail={favoriteTeams.length ? favoriteTeams.slice(0, 2).join(", ") : "None yet"}
               />
@@ -122,7 +119,7 @@ export function Dashboard() {
               />
               <SummaryTile
                 icon={ShieldCheck}
-                label="Leagues"
+                label="Game mix"
                 value={preferredLeagues[0] ?? "Any"}
                 detail={preferredLeagues.slice(1, 3).join(", ") || "Flexible"}
               />
@@ -131,8 +128,8 @@ export function Dashboard() {
 
           <section>
             <div className="mb-3">
-              <h2 className="section-heading">Upcoming games</h2>
-              <p className="text-sm text-slate-600">Matched to your profile preferences and favorite teams.</p>
+              <h2 className="section-heading">Games worth catching</h2>
+              <p className="text-sm text-slate-600">Matched to the teams, leagues, and sports you care about.</p>
             </div>
             {games.length ? (
               <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
@@ -142,15 +139,15 @@ export function Dashboard() {
               </div>
             ) : (
               <p className="rounded border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-soft">
-                No upcoming games match your current profile preferences.
+                No upcoming games match your current picks yet.
               </p>
             )}
           </section>
 
           <section>
             <div className="mb-3">
-              <h2 className="section-heading">Recommended venues</h2>
-              <p className="text-sm text-slate-600">Ranked using your home city, preferred venue types, and favorite teams.</p>
+              <h2 className="section-heading">Places that fit</h2>
+              <p className="text-sm text-slate-600">A short list based on fan energy, location, screens, and your preferred vibe.</p>
             </div>
             {saveMessage ? (
               <p className="mb-3 rounded border border-action/30 bg-action/10 p-3 text-sm text-action">{saveMessage}</p>
@@ -163,17 +160,12 @@ export function Dashboard() {
               </div>
             ) : (
               <p className="rounded border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-soft">
-                No venues match your current profile preferences. Try another home city or venue type.
+                No spots match your current picks. Try another city or venue style.
               </p>
             )}
           </section>
 
-          <section className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-4">
-            <TicketWidget offers={monetization.tickets} />
-            <BettingWidget widget={monetization.betting} />
-            <AdvertisingWidget ads={monetization.ads} premium={user.isPremium} />
-            <PartnerPromotionWidget offers={monetization.promotions} />
-          </section>
+          <GameDayExtras monetization={monetization} premium={user.isPremium} />
         </div>
 
         <AgentRecommendationSidebar cards={recommendations} />

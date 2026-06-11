@@ -431,7 +431,7 @@ const ads: AdPlacement[] = [
     id: "ad-rideshare",
     placementKey: "local-rideshare",
     title: "Ride to the watch party",
-    description: "Mock rideshare credit for fans heading to nearby venues.",
+    description: "A rideshare credit for fans heading to nearby venues.",
     advertiserName: "RideLoop",
     targetUrl: "https://example.com/rideloop"
   },
@@ -447,7 +447,7 @@ const ads: AdPlacement[] = [
     id: "ad-streaming",
     placementKey: "streaming-trial",
     title: "Backup streaming option",
-    description: "Mock streaming partner for games not shown nearby.",
+    description: "A streaming backup for games that are harder to find nearby.",
     advertiserName: "StreamDeck Sports",
     targetUrl: "https://example.com/streamdeck"
   },
@@ -466,15 +466,15 @@ const promotions: PartnerOffer[] = [
     id: "promo-food",
     partnerType: "food",
     title: "Two-for-one wings",
-    description: "Mock local food deal available near top sports bars.",
+    description: "A local food deal available near top sports bars.",
     ctaLabel: "View food deal",
     targetUrl: "https://example.com/food"
   },
   {
     id: "promo-rideshare",
     partnerType: "rideshare",
-    title: "Fan ride placeholder",
-    description: "Future rideshare integration for traveling fans.",
+    title: "Fan ride option",
+    description: "Plan an easy ride to the watch party.",
     ctaLabel: "Plan ride",
     targetUrl: "https://example.com/rides"
   },
@@ -482,7 +482,7 @@ const promotions: PartnerOffer[] = [
     id: "promo-merch",
     partnerType: "merchandise",
     title: "Team scarf bundle",
-    description: "Mock merchandise offer for favorite team supporters.",
+    description: "Team-color gear for favorite team supporters.",
     ctaLabel: "Shop merch",
     targetUrl: "https://example.com/merch"
   },
@@ -490,7 +490,7 @@ const promotions: PartnerOffer[] = [
     id: "promo-streaming",
     partnerType: "streaming",
     title: "Streaming backup",
-    description: "Fallback streaming partner placeholder when venues are full.",
+    description: "A backup option when nearby venues are full.",
     ctaLabel: "See options",
     targetUrl: "https://example.com/streaming"
   },
@@ -738,11 +738,11 @@ function filterGames(input: VenueSearchPayload) {
 
 function ticketOffers(gameIds: string[]): TicketOffer[] {
   const templates = [
-    ["ticket-marketplace", "Fan ticket marketplace", "Mock ticket marketplace listing for the selected game."],
-    ["ticket-value", "Upper bowl value seats", "Sample value-seat option for fans who want to attend instead of watch nearby."],
-    ["ticket-upgrade", "Lower bowl upgrade", "Mock premium-seat offer attached to the selected upcoming game."],
-    ["ticket-family", "Family section option", "Sample family-friendly ticket block for traveling supporters."],
-    ["ticket-last-minute", "Last-minute fan pass", "Mock last-minute ticket option for game-day decisions."]
+    ["ticket-marketplace", "Fan ticket marketplace", "Browse available seats for the selected game."],
+    ["ticket-value", "Upper bowl value seats", "A value-seat option for fans who want to attend instead of watch nearby."],
+    ["ticket-upgrade", "Lower bowl upgrade", "Premium-seat option attached to the selected upcoming game."],
+    ["ticket-family", "Family section option", "A family-friendly ticket block for traveling supporters."],
+    ["ticket-last-minute", "Last-minute fan pass", "Last-minute ticket option for game-day decisions."]
   ] as const;
 
   return gameIds
@@ -763,10 +763,10 @@ function bettingWidget(): BettingWidgetData {
   const enabled = import.meta.env.VITE_ENABLE_BETTING_WIDGET === "true";
   return {
     enabled,
-    title: enabled ? "Betting partner placeholder" : "Betting partner disabled",
+    title: enabled ? "Responsible gaming information" : "Responsible gaming unavailable",
     description: enabled
-      ? "Sample responsible gaming partner module. No odds, advice, or wagering is available."
-      : "Betting is disabled by default for the MVP.",
+      ? "Responsible gaming partner information. No odds, advice, or wagering is available."
+      : "Responsible gaming modules are unavailable in this demo.",
     disclaimer: "Responsible gaming: this MVP does not provide betting advice, odds, deposits, or real-money wagering."
   };
 }
@@ -846,11 +846,11 @@ function buildAgentCards(input: {
     if (sponsoredVenue || ad) {
       cards.push({
         type: "sponsored",
-        title: "Sponsored venue",
+        title: "Worth knowing",
         description: sponsoredVenue
-          ? `${sponsoredVenue.name} has a sponsored placement but was still scored on relevance signals.`
+          ? `${sponsoredVenue.name} is a sponsored pick, but it was still ranked using the same game-day fit signals.`
           : `${ad?.title}: ${ad?.description}`,
-        ctaLabel: "Sponsored",
+        ctaLabel: "Sponsored pick",
         metadata: { venueId: sponsoredVenue?.id, advertiserName: ad?.advertiserName }
       });
     }
@@ -860,7 +860,7 @@ function buildAgentCards(input: {
   if (promotion) {
     cards.push({
       type: "promotion",
-      title: "Local promotion",
+      title: "Nearby bonus",
       description: promotion.description,
       ctaLabel: promotion.ctaLabel
     });
@@ -1155,7 +1155,7 @@ export const mockApi = {
       const gameId = typeof context?.gameId === "string" ? context.gameId : undefined;
       const tickets = gameId ? ticketOffers([gameId]) : [];
       return {
-        reply: tickets.length > 0 ? "Here are mock ticket options for the selected game." : "Select a game first and I can show ticket options.",
+        reply: tickets.length > 0 ? "Here are ticket options for the selected game." : "Select a game first and I can show ticket options.",
         tickets
       };
     }

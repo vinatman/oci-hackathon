@@ -32,11 +32,11 @@ export function SavedVenues() {
 
   return (
     <>
-      <PageHeader title="Saved Venues" eyebrow="Watch list" />
+      <PageHeader title="Saved spots" eyebrow="Your watch list" />
       {loading ? (
-        <LoadingState label="Loading saved venues" />
+        <LoadingState label="Loading saved spots" />
       ) : savedVenues.length === 0 ? (
-        <EmptyState title="No saved venues" message="Save a venue from Venue Finder to keep it here." />
+        <EmptyState title="No saved spots yet" message="Save a place from Find a Spot to keep it here." />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {savedVenues.map((saved) => (
@@ -51,7 +51,7 @@ export function SavedVenues() {
                 <textarea
                   readOnly
                   value={saved.notes ?? ""}
-                  placeholder="Optional notes can be added through the save API."
+                  placeholder="Add notes here in a future version."
                   className="mt-1 min-h-[82px] w-full rounded border border-slate-300 bg-field px-3 py-2 text-sm text-slate-600"
                 />
               </label>

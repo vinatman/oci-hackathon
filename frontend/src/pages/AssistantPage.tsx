@@ -11,11 +11,11 @@ export function AssistantPage() {
 
   return (
     <>
-      <PageHeader title="Assistant Panel" eyebrow="Rule-based helper" />
+      <PageHeader title="Ask Sports Connect" eyebrow="Quick help" />
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <AssistantChatPanel userId={userId} />
         <aside className="rounded border border-slate-200 bg-white p-4 shadow-soft">
-          <h2 className="text-base font-semibold text-ink">Example queries</h2>
+          <h2 className="text-base font-semibold text-ink">Try asking</h2>
           <ul className="mt-3 grid gap-2 text-sm text-slate-600">
             <li>Find me a bar near me showing the Lakers game.</li>
             <li>Show restaurants instead of bars.</li>

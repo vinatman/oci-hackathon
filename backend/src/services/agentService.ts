@@ -89,11 +89,11 @@ export function buildAgentCards(input: {
     if (sponsoredVenue || ad) {
       cards.push({
         type: "sponsored",
-        title: "Sponsored venue",
+        title: "Worth knowing",
         description: sponsoredVenue
-          ? `${sponsoredVenue.name} has a sponsored placement but was still scored on relevance signals.`
+          ? `${sponsoredVenue.name} is a sponsored pick, but it was still ranked using the same game-day fit signals.`
           : `${ad?.title}: ${ad?.description}`,
-        ctaLabel: "Sponsored",
+        ctaLabel: "Sponsored pick",
         metadata: { venueId: sponsoredVenue?.id, advertiserName: ad?.advertiserName }
       });
     }
@@ -103,7 +103,7 @@ export function buildAgentCards(input: {
   if (promotion) {
     cards.push({
       type: "promotion",
-      title: "Local promotion",
+      title: "Nearby bonus",
       description: promotion.description,
       ctaLabel: promotion.ctaLabel
     });

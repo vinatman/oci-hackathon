@@ -83,7 +83,7 @@ export async function handleAssistantMessage(
     const gameIds = context?.gameId ? [context.gameId] : [];
     const tickets = await ticketProvider.getOffers(gameIds);
     return {
-      reply: tickets.length > 0 ? "Here are mock ticket options for the selected game." : "Select a game first and I can show ticket options.",
+      reply: tickets.length > 0 ? "Here are ticket options for the selected game." : "Select a game first and I can show ticket options.",
       tickets
     };
   }

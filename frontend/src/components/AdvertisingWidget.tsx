@@ -5,7 +5,7 @@ export function AdvertisingWidget({ ads, premium }: { ads: AdPlacement[]; premiu
   if (premium) {
     return (
       <section className="rounded-lg border border-amberline/30 bg-amberline/10 p-4 text-sm text-amber-900">
-        Premium active: advertising placements are hidden.
+        Premium is on, so paid placements stay out of your plans.
       </section>
     );
   }
@@ -18,7 +18,7 @@ export function AdvertisingWidget({ ads, premium }: { ads: AdPlacement[]; premiu
     <section className="app-card p-4">
       <div className="flex items-center gap-2">
         <Megaphone className="h-5 w-5 text-amberline" aria-hidden />
-        <h2 className="text-base font-semibold text-ink">Advertising</h2>
+        <h2 className="text-base font-semibold text-ink">Local picks</h2>
       </div>
       <div className="mt-3 grid gap-3">
         {ads.slice(0, 2).map((ad) => (
@@ -27,7 +27,7 @@ export function AdvertisingWidget({ ads, premium }: { ads: AdPlacement[]; premiu
             href={ad.targetUrl ?? "#"}
             className="focus-ring rounded-lg border border-amberline/30 bg-amberline/10 p-3 text-sm transition hover:bg-amberline/15"
           >
-            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-800">Sponsored</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-800">Sponsored pick</span>
             <strong className="mt-1 block text-ink">{ad.title}</strong>
             <span className="mt-1 block text-slate-700">{ad.description}</span>
           </a>

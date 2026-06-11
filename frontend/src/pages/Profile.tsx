@@ -20,7 +20,7 @@ export function Profile() {
     try {
       const response = await api.updateProfile(userId, value);
       setUser(response.user);
-      setMessage("Profile saved.");
+      setMessage("Preferences saved.");
     } finally {
       setSaving(false);
     }
@@ -28,7 +28,7 @@ export function Profile() {
 
   return (
     <>
-      <PageHeader title="Profile" eyebrow="Preferences">
+      <PageHeader title="Your game-day preferences" eyebrow={`Hey ${user.displayName}!`}>
         <PremiumBadge active={user.isPremium} />
       </PageHeader>
       {message ? <p className="mb-4 rounded border border-action/30 bg-action/10 p-3 text-sm text-action">{message}</p> : null}

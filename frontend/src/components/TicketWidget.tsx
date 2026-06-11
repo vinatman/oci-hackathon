@@ -10,7 +10,7 @@ export function TicketWidget({ offers }: { offers: TicketOffer[] }) {
     <section className="app-card p-4">
       <div className="flex items-center gap-2">
         <Ticket className="h-5 w-5 text-action" aria-hidden />
-        <h2 className="text-base font-semibold text-ink">Find Tickets</h2>
+        <h2 className="text-base font-semibold text-ink">Thinking about going?</h2>
       </div>
       <div className="mt-3 grid gap-3">
         {offers.map((offer) => (

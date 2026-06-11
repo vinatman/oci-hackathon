@@ -2,11 +2,11 @@ import { Bot, Heart, Home, MapPinned, Star, UserCircle } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const navItems = [
-  { to: "/", label: "Dashboard", mobileLabel: "Home", icon: Home, end: true },
-  { to: "/profile", label: "Profile", mobileLabel: "Profile", icon: UserCircle, end: false },
-  { to: "/favorite-teams", label: "Favorite Teams", mobileLabel: "Teams", icon: Star, end: false },
-  { to: "/venue-finder", label: "Venue Finder", mobileLabel: "Find", icon: MapPinned, end: false },
-  { to: "/saved-venues", label: "Saved Venues", mobileLabel: "Saved", icon: Heart, end: false },
+  { to: "/", label: "Home", mobileLabel: "Home", icon: Home, end: true },
+  { to: "/profile", label: "Preferences", mobileLabel: "Prefs", icon: UserCircle, end: false },
+  { to: "/favorite-teams", label: "Teams", mobileLabel: "Teams", icon: Star, end: false },
+  { to: "/venue-finder", label: "Find a Spot", mobileLabel: "Find", icon: MapPinned, end: false },
+  { to: "/saved-venues", label: "Saved Spots", mobileLabel: "Saved", icon: Heart, end: false },
   { to: "/assistant", label: "Assistant", mobileLabel: "Assistant", icon: Bot, end: false }
 ];
 
