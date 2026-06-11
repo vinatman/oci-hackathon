@@ -22,6 +22,9 @@ export class MockVenueProvider implements VenueDiscoveryProvider {
       include: {
         teamAffinity: {
           include: { team: true }
+        },
+        _count: {
+          select: { savedBy: true }
         }
       }
     });

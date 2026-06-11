@@ -63,7 +63,15 @@ export interface RankedVenue {
   rating?: number | null;
   isSponsored: boolean;
   confidenceScore: number;
+  confidencePercentage: number;
   evidenceText: string;
+  evidenceBadges: string[];
+  matchedSignals: Array<{
+    key: string;
+    label: string;
+    detail: string;
+    weight: number;
+  }>;
   distanceKm?: number;
   relevantGame?: {
     id: string;

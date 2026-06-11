@@ -7,7 +7,10 @@ export function VenuePreviewPopup({ venue, onSave }: { venue: RankedVenue; onSav
       <h3 className="font-semibold text-ink">{venue.name}</h3>
       <p className="mt-1 text-slate-600">{venue.venueType}</p>
       <p className="mt-1 text-slate-600">{venue.address}</p>
-      <p className="mt-2 font-semibold text-action">{Math.round(venue.confidenceScore * 100)}% confidence</p>
+      <p className="mt-2 font-semibold text-action">{venue.confidencePercentage}% confidence</p>
+      {venue.evidenceBadges.length ? (
+        <p className="mt-1 text-xs text-slate-600">{venue.evidenceBadges.slice(0, 2).join(" · ")}</p>
+      ) : null}
       <button
         type="button"
         onClick={() => onSave(venue.id)}

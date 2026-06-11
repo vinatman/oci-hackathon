@@ -15,7 +15,17 @@ const venue: RankedVenue = {
   source: "test",
   isSponsored: true,
   confidenceScore: 0.92,
-  evidenceText: "Lakers watch party evidence."
+  confidencePercentage: 92,
+  evidenceText: "Matched on known fan venue, watch-party language.",
+  evidenceBadges: ["Known fan venue", "Watch party"],
+  matchedSignals: [
+    {
+      key: "team-affinity",
+      label: "Known fan venue",
+      detail: "Lakers watch party evidence.",
+      weight: 0.15
+    }
+  ]
 };
 
 describe("agent recommendations", () => {

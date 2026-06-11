@@ -7,7 +7,7 @@ import { haversineKm, scoreVenue } from "./scoring.js";
 import type { VenueSearchInput } from "./validation.js";
 
 type VenueWithAffinity = Prisma.VenueGetPayload<{
-  include: { teamAffinity: { include: { team: true } } };
+  include: { teamAffinity: { include: { team: true } }; _count: { select: { savedBy: true } } };
 }>;
 
 type PreferenceSource = {
@@ -96,6 +96,13 @@ export async function findVenueMatches(prisma: PrismaClient, userId: string, inp
 
   const effectiveInput = applyProfilePreferenceDefaults(user, input);
   const games = await gameProvider.upcoming(prisma, effectiveInput);
+  const selectedTeam = effectiveInput.teamId
+    ? user.favoriteTeams.find((favorite) => favorite.team.id === effectiveInput.teamId)?.team ??
+      games
+        .flatMap((game) => [game.homeTeam, game.awayTeam])
+        .find((team) => team.id === effectiveInput.teamId) ??
+      (await prisma.team.findUnique({ where: { id: effectiveInput.teamId } }))
+    : undefined;
   let venues = (await venueProvider.search(prisma, effectiveInput)) as VenueWithAffinity[];
 
   if (venues.length === 0 && effectiveInput.venueTypes.length > 0) {
@@ -110,7 +117,10 @@ export async function findVenueMatches(prisma: PrismaClient, userId: string, inp
         : undefined;
       const affinity = relevantAffinity(venue, effectiveInput.teamId);
       const score = scoreVenue({
-        venue,
+        venue: {
+          ...venue,
+          savedCount: venue._count.savedBy
+        },
         search: effectiveInput,
         affinity: affinity
           ? {
@@ -118,7 +128,8 @@ export async function findVenueMatches(prisma: PrismaClient, userId: string, inp
               evidenceText: affinity.evidenceText
             }
           : undefined,
-        distanceKm
+        distanceKm,
+        teamName: selectedTeam?.name
       });
       const relevantGame = games[0]
         ? {
@@ -131,7 +142,10 @@ export async function findVenueMatches(prisma: PrismaClient, userId: string, inp
       return {
         ...venue,
         confidenceScore: score.confidenceScore,
+        confidencePercentage: score.confidencePercentage,
         evidenceText: score.evidenceText,
+        evidenceBadges: score.evidenceBadges,
+        matchedSignals: score.matchedSignals,
         distanceKm,
         relevantGame,
         monetizationCta:

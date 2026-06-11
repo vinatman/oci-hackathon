@@ -28,10 +28,20 @@ export function VenueCard({
           </p>
         </div>
         <div className="w-fit rounded-lg bg-action/10 px-3 py-2 text-center">
-          <p className="text-lg font-semibold text-action">{Math.round(venue.confidenceScore * 100)}%</p>
+          <p className="text-lg font-semibold text-action">{venue.confidencePercentage}%</p>
           <p className="text-[11px] uppercase tracking-[0.12em] text-slate-500">confidence</p>
         </div>
       </div>
+
+      {venue.evidenceBadges.length ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {venue.evidenceBadges.slice(0, 6).map((badge) => (
+            <span key={badge} className="rounded-lg bg-action/10 px-2.5 py-1 text-xs font-semibold text-action">
+              {badge}
+            </span>
+          ))}
+        </div>
+      ) : null}
 
       <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
         <p>{formatDistance(venue.distanceKm)}</p>
@@ -45,6 +55,27 @@ export function VenueCard({
       </div>
 
       <p className="mt-3 text-sm text-slate-700">{venue.evidenceText}</p>
+
+      <details className="mt-3 rounded-lg border border-slate-200 bg-field p-3">
+        <summary className="cursor-pointer text-sm font-semibold text-ink">Why this match?</summary>
+        <div className="mt-3 grid gap-2">
+          {venue.matchedSignals.length ? (
+            venue.matchedSignals
+              .filter((signal) => signal.key !== "sponsored-capped")
+              .map((signal) => (
+                <div key={`${venue.id}-${signal.key}`} className="rounded-lg bg-white p-3 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-ink">{signal.label}</p>
+                    <p className="text-xs font-semibold text-action">+{Math.round(signal.weight * 100)}</p>
+                  </div>
+                  <p className="mt-1 text-slate-600">{signal.detail}</p>
+                </div>
+              ))
+          ) : (
+            <p className="text-sm text-slate-600">This venue has limited team-specific evidence, so its score stays conservative.</p>
+          )}
+        </div>
+      </details>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button

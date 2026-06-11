@@ -14,9 +14,17 @@ import type {
   VenueSearchResponse
 } from "../types/domain";
 
-type SeedVenue = Omit<RankedVenue, "confidenceScore" | "evidenceText" | "distanceKm" | "relevantGame" | "monetizationCta"> & {
-  source: string;
-};
+type SeedVenue = Omit<
+  RankedVenue,
+  | "confidenceScore"
+  | "confidencePercentage"
+  | "evidenceText"
+  | "evidenceBadges"
+  | "matchedSignals"
+  | "distanceKm"
+  | "relevantGame"
+  | "monetizationCta"
+> & { source: string };
 
 interface VenueAffinity {
   venueId: string;
@@ -515,6 +523,27 @@ const cityCenters: Record<string, { latitude: number; longitude: number }> = {
   "las vegas": { latitude: 36.1716, longitude: -115.1391 }
 };
 
+const strongVenueTypes = new Set(["sports bar", "pub", "bar", "restaurant", "stadium bar", "fan club", "watch party"]);
+const sportsTerms = [
+  "sports",
+  "screen",
+  "screens",
+  "big screen",
+  "broadcast",
+  "game",
+  "match",
+  "kickoff",
+  "puck",
+  "hoops",
+  "football",
+  "basketball",
+  "baseball",
+  "hockey",
+  "soccer"
+];
+const watchPartyTerms = ["watch party", "game day", "game-day", "fans", "supporters", "alumni", "rivalry"];
+const teamTokenStopWords = new Set(["the", "fc", "cf", "sc", "los", "san", "new", "city", "united"]);
+
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
@@ -640,60 +669,193 @@ function scoreVenue({
   venue,
   search,
   affinity,
-  distanceKm
+  distanceKm,
+  teamName,
+  savedCount
 }: {
   venue: SeedVenue;
   search: VenueSearchPayload;
   affinity?: VenueAffinity;
   distanceKm?: number;
+  teamName?: string;
+  savedCount?: number;
 }) {
-  const evidence: string[] = [];
-  let score = 0.24;
+  const matchedSignals: RankedVenue["matchedSignals"] = [];
+  const evidenceBadges: string[] = [];
+  let score = 0.2;
+
+  const searchableText = `${venue.name} ${venue.description ?? ""} ${affinity?.evidenceText ?? ""}`.toLowerCase();
+  const evidenceOnlyText = (affinity?.evidenceText ?? "").toLowerCase();
+  const venueType = venue.venueType.toLowerCase();
+
+  const addSignal = (signal: RankedVenue["matchedSignals"][number], badge?: string) => {
+    score += signal.weight;
+    matchedSignals.push(signal);
+    if (badge && !evidenceBadges.includes(badge)) {
+      evidenceBadges.push(badge);
+    }
+  };
+
+  if (strongVenueTypes.has(venueType)) {
+    const label = venueType === "sports bar" ? "Sports bar" : `${venue.venueType} venue`;
+    addSignal(
+      {
+        key: "venue-type",
+        label,
+        detail: `${venue.name} is categorized as a ${venue.venueType}, which is a high-intent setting for watching live sports.`,
+        weight: venueType === "sports bar" || venueType === "watch party" ? 0.14 : 0.1
+      },
+      venueType === "sports bar" ? "Sports bar" : venue.venueType
+    );
+  }
 
   if (search.venueTypes.length > 0 && search.venueTypes.includes(venue.venueType)) {
-    score += 0.2;
-    evidence.push(`matches preferred venue type: ${venue.venueType}`);
+    addSignal({
+      key: "preferred-venue-type",
+      label: "Matches your venue style",
+      detail: `It matches the selected venue style: ${venue.venueType}.`,
+      weight: 0.08
+    });
   }
 
   if (search.city && venue.city.toLowerCase() === search.city.toLowerCase()) {
-    score += 0.14;
-    evidence.push(`located in ${venue.city}`);
+    addSignal({
+      key: "city-match",
+      label: "Same city",
+      detail: `It is located in ${venue.city}, matching the selected city.`,
+      weight: 0.08
+    });
   }
 
   if (typeof distanceKm === "number") {
     const radius = Math.max(search.radiusKm || 1, 1);
-    const distanceBoost = Math.max(0, 0.18 * (1 - Math.min(distanceKm, radius) / radius));
-    score += distanceBoost;
-    evidence.push(`${distanceKm.toFixed(1)} km from selected location`);
-  }
-
-  if (affinity) {
-    score += 0.22 * affinity.confidenceScore;
-    evidence.push(affinity.evidenceText);
-  }
-
-  const searchableText = `${venue.description ?? ""} ${affinity?.evidenceText ?? ""}`.toLowerCase();
-  for (const term of [search.sport, search.league].filter(Boolean) as string[]) {
-    if (searchableText.includes(term.toLowerCase())) {
-      score += 0.05;
-      evidence.push(`mentions ${term}`);
+    const distanceBoost = Math.max(0, 0.13 * (1 - Math.min(distanceKm, radius) / radius));
+    if (distanceBoost > 0) {
+      addSignal(
+        {
+          key: "proximity",
+          label: "Close by",
+          detail: `${venue.name} is ${distanceKm.toFixed(1)} km from the selected location.`,
+          weight: distanceBoost
+        },
+        distanceKm <= Math.min(5, radius * 0.35) ? "Close by" : undefined
+      );
     }
   }
 
-  if (/watch party|sports bar|big screen|fan club|game-day/i.test(searchableText)) {
-    score += 0.08;
-    evidence.push("has watch-party or sports-bar indicators");
+  if (affinity) {
+    addSignal(
+      {
+        key: "team-affinity",
+        label: "Known fan venue",
+        detail: affinity.evidenceText,
+        weight: 0.16 * affinity.confidenceScore
+      },
+      "Known fan venue"
+    );
+  }
+
+  if (sportsTerms.some((term) => searchableText.includes(term))) {
+    addSignal(
+      {
+        key: "sports-language",
+        label: "Sports language",
+        detail: "The venue name, description, or evidence includes sports-viewing language.",
+        weight: 0.07
+      },
+      "Sports signal"
+    );
+  }
+
+  if (search.league && termMatches(evidenceOnlyText, search.league)) {
+    addSignal(
+      {
+        key: "league-mentioned",
+        label: "League mentioned",
+        detail: `The venue evidence mentions ${search.league}.`,
+        weight: 0.08
+      },
+      "League mentioned"
+    );
+  }
+
+  if (watchPartyTerms.some((term) => searchableText.includes(term))) {
+    addSignal(
+      {
+        key: "watch-party-language",
+        label: "Watch-party language",
+        detail: "The venue evidence includes watch-party, game-day, fans, supporters, alumni, or rivalry language.",
+        weight: 0.1
+      },
+      "Watch party"
+    );
+  }
+
+  if (savedCount && savedCount > 0) {
+    addSignal(
+      {
+        key: "saved-by-fans",
+        label: "Saved by fans",
+        detail: `${savedCount} fan${savedCount === 1 ? " has" : "s have"} saved this venue.`,
+        weight: 0.06
+      },
+      "Saved by fans"
+    );
+  }
+
+  if (teamName && teamNameMatches(evidenceOnlyText, teamName, search.teamId)) {
+    addSignal(
+      {
+        key: "team-mentioned",
+        label: "Team mentioned",
+        detail: `The venue evidence mentions ${teamName}.`,
+        weight: 0.12
+      },
+      "Team mentioned"
+    );
   }
 
   if (venue.isSponsored) {
-    score += 0.03;
-    evidence.push("sponsored venue, capped to avoid dominating relevance");
+    addSignal({
+      key: "sponsored-capped",
+      label: "Sponsored placement",
+      detail: "Sponsorship adds only a small capped boost and does not dominate the ranking.",
+      weight: 0.01
+    });
   }
 
+  const confidenceScore = Math.max(0, Math.min(1, Number(score.toFixed(2))));
+  const customerSignals = matchedSignals.filter((signal) => signal.key !== "sponsored-capped");
+
   return {
-    confidenceScore: Math.max(0, Math.min(1, Number(score.toFixed(2)))),
-    evidenceText: evidence.length > 0 ? evidence.join("; ") : "general venue match"
+    confidenceScore,
+    confidencePercentage: Math.round(confidenceScore * 100),
+    evidenceText:
+      customerSignals.length > 0
+        ? `Matched on ${customerSignals
+            .slice(0, 4)
+            .map((signal) => signal.label.toLowerCase())
+            .join(", ")}.`
+        : "General venue match with limited team-specific evidence.",
+    evidenceBadges,
+    matchedSignals
   };
+}
+
+function termMatches(text: string, term: string) {
+  return text.includes(term.toLowerCase());
+}
+
+function teamNameMatches(text: string, teamNameOrId: string, teamId?: string) {
+  if (!teamNameOrId) return false;
+  const normalized = teamNameOrId.toLowerCase();
+  if (text.includes(normalized)) return true;
+  if (teamId && text.includes(teamId.toLowerCase())) return true;
+
+  return normalized
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 4 && !teamTokenStopWords.has(token))
+    .some((token) => text.includes(token));
 }
 
 function formatGameLabel(game: Game) {
@@ -878,9 +1040,10 @@ function buildAgentCards(input: {
   return cards;
 }
 
-function rankedVenuesFor(user: User, input: VenueSearchPayload, games: Game[]) {
+function rankedVenuesFor(user: User, input: VenueSearchPayload, games: Game[], savedVenueIds = new Set<string>()) {
   const origin = selectedLocation(input);
   const city = normalizedCity(input.city);
+  const selectedTeam = input.teamId ? teamById.get(input.teamId) : undefined;
   const relevantGame = games[0]
     ? {
         id: games[0].id,
@@ -907,11 +1070,21 @@ function rankedVenuesFor(user: User, input: VenueSearchPayload, games: Game[]) {
     .map((venue): RankedVenue => {
       const distanceKm = origin ? haversineKm(origin, { latitude: venue.latitude, longitude: venue.longitude }) : undefined;
       const affinity = relevantAffinity(venue.id, input.teamId);
-      const score = scoreVenue({ venue, search: input, affinity, distanceKm });
+      const score = scoreVenue({
+        venue,
+        search: input,
+        affinity,
+        distanceKm,
+        teamName: selectedTeam?.name,
+        savedCount: savedVenueIds.has(venue.id) ? 1 : 0
+      });
       return {
         ...venue,
         confidenceScore: score.confidenceScore,
+        confidencePercentage: score.confidencePercentage,
         evidenceText: score.evidenceText,
+        evidenceBadges: score.evidenceBadges,
+        matchedSignals: score.matchedSignals,
         distanceKm,
         relevantGame,
         monetizationCta:
@@ -922,11 +1095,20 @@ function rankedVenuesFor(user: User, input: VenueSearchPayload, games: Game[]) {
     .sort((a, b) => b.confidenceScore - a.confidenceScore);
 
   return ranked.length ? ranked.slice(0, 10) : candidates.slice(0, 10).map((venue) => {
-    const score = scoreVenue({ venue, search: input, affinity: relevantAffinity(venue.id, input.teamId) });
+    const score = scoreVenue({
+      venue,
+      search: input,
+      affinity: relevantAffinity(venue.id, input.teamId),
+      teamName: selectedTeam?.name,
+      savedCount: savedVenueIds.has(venue.id) ? 1 : 0
+    });
     return {
       ...venue,
       confidenceScore: score.confidenceScore,
+      confidencePercentage: score.confidencePercentage,
       evidenceText: score.evidenceText,
+      evidenceBadges: score.evidenceBadges,
+      matchedSignals: score.matchedSignals,
       relevantGame,
       monetizationCta:
         venue.isSponsored && !user.isPremium ? { label: "Sponsored table option", kind: "sponsored" as const } : undefined
@@ -934,7 +1116,7 @@ function rankedVenuesFor(user: User, input: VenueSearchPayload, games: Game[]) {
   });
 }
 
-function getRankedVenue(venueId: string, user: User) {
+function getRankedVenue(venueId: string, user: User, savedVenueIds = new Set<string>()) {
   const venue = venues.find((item) => item.id === venueId);
   if (!venue) return undefined;
   const favoriteTeam = user.favoriteTeams?.[0]?.team;
@@ -946,7 +1128,7 @@ function getRankedVenue(venueId: string, user: User) {
     venueTypes: user.profile?.preferredVenueTypes ?? [],
     radiusKm: 40
   });
-  return rankedVenuesFor(user, input, filterGames(input)).find((item) => item.id === venueId);
+  return rankedVenuesFor(user, input, filterGames(input), savedVenueIds).find((item) => item.id === venueId);
 }
 
 export const mockApi = {
@@ -1037,7 +1219,7 @@ export const mockApi = {
     if (state.user.id !== userId) throw new Error("User not found");
     const search = applyProfileDefaults(state.user, payload);
     const games = filterGames(search);
-    const venues = rankedVenuesFor(state.user, search, games);
+    const venues = rankedVenuesFor(state.user, search, games, new Set(state.savedVenues.map((item) => item.venueId)));
     const monetization = monetizationFor(state.user, search.gameId ? [search.gameId] : games.slice(0, 3).map((game) => game.id));
     const agentRecommendations = buildAgentCards({
       venues,
@@ -1061,7 +1243,7 @@ export const mockApi = {
     const state = loadState();
     if (state.user.id !== userId) throw new Error("User not found");
     const savedVenues: SavedVenue[] = state.savedVenues.flatMap((saved) => {
-      const venue = getRankedVenue(saved.venueId, state.user);
+      const venue = getRankedVenue(saved.venueId, state.user, new Set(state.savedVenues.map((item) => item.venueId)));
       if (!venue) return [];
       return [
         {
@@ -1085,7 +1267,7 @@ export const mockApi = {
       state.savedVenues.push({ venueId, notes, createdAt: new Date().toISOString() });
     }
     saveState(state);
-    const venue = getRankedVenue(venueId, state.user)!;
+    const venue = getRankedVenue(venueId, state.user, new Set(state.savedVenues.map((item) => item.venueId)))!;
     return {
       savedVenue: {
         id: `saved-${userId}-${venueId}`,
