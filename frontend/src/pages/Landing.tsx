@@ -43,6 +43,8 @@ const afterItems = [
   "Save trusted spots for future trips"
 ];
 
+const fanFitSignals = ["Team match", "Watch-party signals", "Distance", "Venue type", "Saved by fans"];
+
 export function Landing() {
   return (
     <main className="min-h-screen bg-field text-ink">
@@ -72,10 +74,6 @@ function Hero() {
               </div>
             ))}
           </div>
-        </div>
-        <div className="absolute bottom-10 left-8 hidden w-72 rounded-lg border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur lg:block">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-200">Evidence</p>
-          <p className="mt-2 text-sm leading-6 text-slate-200">Team affinity, watch-party signals, distance, and venue type.</p>
         </div>
       </div>
 
@@ -122,7 +120,10 @@ function Hero() {
               Try demo account
             </Link>
           </div>
-          <p className="mt-4 max-w-2xl text-xs leading-5 text-slate-300">
+          <div className="mt-7 lg:hidden">
+            <FanFitCard tone="dark" />
+          </div>
+          <p className="mt-6 max-w-xl rounded-lg border border-white/10 bg-white/5 p-3 text-xs leading-5 text-slate-300">
             Hackathon demo note: this build uses seeded games, venues, and mock providers to show the experience without
             paid APIs or unverified live venue claims.
           </p>
@@ -143,17 +144,65 @@ function Hero() {
                 <PreviewCard title="33 Taps Silver Lake" meta="Restaurant · LAFC and Lakers screens" score="84%" />
                 <PreviewCard title="LA Fan Club House" meta="Fan club · saved by travelers" score="78%" />
               </div>
-              <div className="mt-4 rounded-lg border border-slate-200 bg-field p-3">
-                <p className="text-sm font-semibold">Why this match?</p>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
-                  Matches your team, city, venue style, and watch-party evidence.
-                </p>
+              <div className="mt-4">
+                <FanFitCard />
               </div>
             </div>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+function FanFitCard({ tone = "light" }: { tone?: "light" | "dark" }) {
+  const isDark = tone === "dark";
+
+  return (
+    <article
+      className={[
+        "rounded-lg border p-4 shadow-soft",
+        isDark ? "border-white/15 bg-white/10 text-white backdrop-blur" : "border-action/20 bg-white text-ink"
+      ].join(" ")}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className={["text-xs font-semibold uppercase tracking-[0.12em]", isDark ? "text-emerald-200" : "text-action"].join(" ")}>
+            Smart matching
+          </p>
+          <h3 className="mt-1 text-xl font-semibold">Fan Fit at a Glance</h3>
+        </div>
+        <span
+          className={[
+            "rounded-lg px-3 py-2 text-sm font-semibold",
+            isDark ? "bg-emerald-200 text-ink" : "bg-action/10 text-action"
+          ].join(" ")}
+        >
+          92%
+        </span>
+      </div>
+      <p className={["mt-3 text-sm leading-6", isDark ? "text-slate-200" : "text-slate-600"].join(" ")}>
+        We score each venue against your teams, city, venue style, and game-day signals, so you know where to watch
+        before kickoff.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {fanFitSignals.map((signal) => (
+          <span
+            key={signal}
+            className={[
+              "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold",
+              isDark ? "border-white/15 bg-white/10 text-slate-100" : "border-action/15 bg-action/10 text-action"
+            ].join(" ")}
+          >
+            <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+            {signal}
+          </span>
+        ))}
+      </div>
+      <p className={["mt-4 text-sm font-semibold", isDark ? "text-emerald-200" : "text-ink"].join(" ")}>
+        Less guessing. More cheering.
+      </p>
+    </article>
   );
 }
 
