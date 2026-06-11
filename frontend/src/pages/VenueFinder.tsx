@@ -1,0 +1,321 @@
+import { Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { api } from "../api/client";
+import { AdvertisingWidget } from "../components/AdvertisingWidget";
+import { AgentRecommendationSidebar } from "../components/AgentRecommendationSidebar";
+import { AssistantChatPanel } from "../components/AssistantChatPanel";
+import { BettingWidget } from "../components/BettingWidget";
+import { EmptyState } from "../components/EmptyState";
+import { ErrorState } from "../components/ErrorState";
+import { GameCard } from "../components/GameCard";
+import { LeagueSelector } from "../components/LeagueSelector";
+import { LoadingState } from "../components/LoadingState";
+import { LocationPicker } from "../components/LocationPicker";
+import { PageHeader } from "../components/PageHeader";
+import { PartnerPromotionWidget } from "../components/PartnerPromotionWidget";
+import { PremiumBadge } from "../components/PremiumBadge";
+import { RadiusSelector } from "../components/RadiusSelector";
+import { ResultsViewToggle } from "../components/ResultsViewToggle";
+import { SportSelector } from "../components/SportSelector";
+import { TeamSelector } from "../components/TeamSelector";
+import { TicketWidget } from "../components/TicketWidget";
+import { VenueListView } from "../components/VenueListView";
+import { VenueMapView } from "../components/VenueMapView";
+import { VenueTypeSelector } from "../components/VenueTypeSelector";
+import { useDemoUser } from "../hooks/useDemoUser";
+import type { Game, Team, VenueSearchPayload, VenueSearchResponse } from "../types/domain";
+import {
+  coerceResultsViewMode,
+  getStoredResultsViewMode,
+  storeResultsViewMode,
+  type ResultsViewMode
+} from "../utils/resultsViewMode";
+import { formatGameLabel } from "../utils/format";
+
+interface LocationState {
+  mode: "current" | "manual";
+  city: string;
+  latitude?: number;
+  longitude?: number;
+  status: string;
+}
+
+export function VenueFinder() {
+  const { user, userId } = useDemoUser();
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [games, setGames] = useState<Game[]>([]);
+  const [sport, setSport] = useState("");
+  const [league, setLeague] = useState("");
+  const [teamId, setTeamId] = useState("");
+  const [gameId, setGameId] = useState("");
+  const [venueTypes, setVenueTypes] = useState<string[]>([]);
+  const [radiusKm, setRadiusKm] = useState(40);
+  const [location, setLocation] = useState<LocationState>({
+    mode: "manual",
+    city: "Los Angeles",
+    status: "Choose current location or a supported city."
+  });
+  const [results, setResults] = useState<VenueSearchResponse>();
+  const [viewMode, setViewMode] = useState<ResultsViewMode>(() => getStoredResultsViewMode());
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    const profile = user.profile;
+    const preferredSport = profile?.preferredSports?.[0];
+    const preferredLeague = profile?.preferredLeagues?.[0];
+    const matchingFavorite = user.favoriteTeams?.find(({ team }) => {
+      if (preferredSport && team.sport !== preferredSport) return false;
+      if (preferredLeague && team.league !== preferredLeague) return false;
+      return true;
+    })?.team;
+    const favorite = matchingFavorite ?? (!preferredSport && !preferredLeague ? user.favoriteTeams?.[0]?.team : undefined);
+    setSport(preferredSport ?? favorite?.sport ?? "");
+    setLeague(preferredLeague ?? favorite?.league ?? "");
+    setTeamId(favorite?.id ?? "");
+    setVenueTypes(profile?.preferredVenueTypes?.length ? profile.preferredVenueTypes.slice(0, 2) : ["Sports bar"]);
+    setLocation((current) => ({
+      ...current,
+      city: user.homeCity ?? "Los Angeles",
+      status: user.homeCity ? "Home city loaded from profile." : current.status
+    }));
+  }, [user]);
+
+  useEffect(() => {
+    const load = async () => {
+      const [teamResponse, gameResponse] = await Promise.all([api.getTeams(), api.getUpcomingGames()]);
+      setTeams(teamResponse.teams);
+      setGames(gameResponse.games);
+      setInitialLoading(false);
+    };
+    void load();
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation((current) => ({
+          ...current,
+          mode: "current",
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          status: "Current location ready."
+        }));
+      },
+      () => {
+        setLocation((current) => ({
+          ...current,
+          status: current.city ? "Using selected city. Current location was not available." : current.status
+        }));
+      },
+      { enableHighAccuracy: false, timeout: 3500 }
+    );
+  }, []);
+
+  useEffect(() => {
+    if (results) {
+      setViewMode((current) => coerceResultsViewMode(current, results.mapAvailable));
+    }
+  }, [results]);
+
+  const filteredTeams = useMemo(
+    () =>
+      teams.filter((team) => {
+        if (sport && team.sport !== sport) return false;
+        if (league && team.league !== league) return false;
+        return true;
+      }),
+    [league, sport, teams]
+  );
+
+  const filteredGames = useMemo(
+    () =>
+      games.filter((game) => {
+        if (sport && game.sport !== sport) return false;
+        if (league && game.league !== league) return false;
+        if (teamId && game.homeTeamId !== teamId && game.awayTeamId !== teamId) return false;
+        return true;
+      }),
+    [games, league, sport, teamId]
+  );
+
+  const payload: VenueSearchPayload = {
+    sport: sport || undefined,
+    league: league || undefined,
+    teamId: teamId || undefined,
+    gameId: gameId || undefined,
+    city: location.mode === "manual" ? location.city || undefined : undefined,
+    latitude: location.mode === "current" ? location.latitude : undefined,
+    longitude: location.mode === "current" ? location.longitude : undefined,
+    venueTypes,
+    radiusKm
+  };
+
+  const search = async () => {
+    if (!userId) return;
+    setLoading(true);
+    setError("");
+    setSaveMessage("");
+    try {
+      const response = await api.searchVenues(userId, payload);
+      setResults(response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Venue search failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveVenue = async (venueId: string) => {
+    if (!userId) return;
+    await api.saveVenue(userId, venueId);
+    setSaveMessage("Venue saved.");
+  };
+
+  const changeViewMode = (mode: ResultsViewMode) => {
+    setViewMode(mode);
+    storeResultsViewMode(mode);
+  };
+
+  const applySuggestedFilters = (filters: Record<string, unknown>) => {
+    if (Array.isArray(filters.venueTypes)) {
+      setVenueTypes(filters.venueTypes.filter((value): value is string => typeof value === "string"));
+    }
+    if (typeof filters.sport === "string") setSport(filters.sport);
+    if (typeof filters.league === "string") setLeague(filters.league);
+    if (typeof filters.teamId === "string") setTeamId(filters.teamId);
+  };
+
+  if (!user || !userId || initialLoading) {
+    return <LoadingState label="Loading venue finder" />;
+  }
+
+  const userLocation =
+    location.mode === "current" && typeof location.latitude === "number" && typeof location.longitude === "number"
+      ? { latitude: location.latitude, longitude: location.longitude }
+      : undefined;
+
+  return (
+    <>
+      <PageHeader title="Venue Finder" eyebrow="Find your game">
+        <PremiumBadge active={user.isPremium} />
+      </PageHeader>
+
+      <section className="mb-6 grid gap-5 rounded border border-slate-200 bg-white p-4 shadow-soft">
+        <div className="grid gap-4 md:grid-cols-3">
+          <SportSelector value={sport} onChange={setSport} />
+          <LeagueSelector value={league} onChange={setLeague} />
+          <TeamSelector teams={filteredTeams} value={teamId} onChange={setTeamId} />
+        </div>
+
+        <label className="block text-sm font-medium text-ink">
+          Upcoming game
+          <select
+            value={gameId}
+            onChange={(event) => setGameId(event.target.value)}
+            className="focus-ring mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+          >
+            <option value="">Best matching upcoming game</option>
+            {filteredGames.map((game) => (
+              <option key={game.id} value={game.id}>
+                {formatGameLabel(game)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <LocationPicker value={location} onChange={setLocation} />
+        <VenueTypeSelector values={venueTypes} onChange={setVenueTypes} />
+        <RadiusSelector value={radiusKm} onChange={setRadiusKm} />
+
+        <button
+          type="button"
+          onClick={() => void search()}
+          disabled={loading}
+          className="focus-ring inline-flex w-fit items-center gap-2 rounded bg-action px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Search className="h-4 w-4" aria-hidden />
+          {loading ? "Finding Venues" : "Find Venues"}
+        </button>
+      </section>
+
+      {error ? <ErrorState message={error} /> : null}
+      {saveMessage ? <p className="mb-4 rounded border border-action/30 bg-action/10 p-3 text-sm text-action">{saveMessage}</p> : null}
+
+      {loading ? <LoadingState label="Ranking venues" /> : null}
+
+      {!results && !loading ? (
+        <EmptyState title="Ready to search" message="Choose a game, city or current location, venue type, then find venues." />
+      ) : null}
+
+      {results ? (
+        <div className="grid gap-6">
+          <section>
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-ink">Upcoming games</h2>
+                <p className="text-sm text-slate-600">Matched to your sport, league, and team filters.</p>
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {results.games.map((game) => (
+                <GameCard key={game.id} game={game} compact />
+              ))}
+            </div>
+          </section>
+
+          <section className="grid gap-4 lg:grid-cols-4">
+            <TicketWidget offers={results.monetization.tickets} />
+            <BettingWidget widget={results.monetization.betting} />
+            <AdvertisingWidget ads={results.monetization.ads} premium={user.isPremium} />
+            <PartnerPromotionWidget offers={results.monetization.promotions} />
+          </section>
+
+          <section>
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-ink">Recommended venues</h2>
+                <p className="text-sm text-slate-600">
+                  Ranked by venue type, location, distance, team affinity, and fan evidence.
+                </p>
+              </div>
+              <ResultsViewToggle value={viewMode} onChange={changeViewMode} mapAvailable={results.mapAvailable} />
+            </div>
+            {!results.mapAvailable ? (
+              <p className="mb-3 rounded border border-amberline/30 bg-amberline/10 p-3 text-sm text-amber-900">
+                Map view needs venue coordinates. Try current location or choose a supported city.
+              </p>
+            ) : null}
+            <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+              <div>
+                {viewMode === "map" ? (
+                  <VenueMapView venues={results.venues} userLocation={userLocation} onSave={saveVenue} />
+                ) : (
+                  <VenueListView venues={results.venues} premium={user.isPremium} onSave={saveVenue} />
+                )}
+              </div>
+              <AgentRecommendationSidebar cards={results.agentRecommendations} />
+            </div>
+          </section>
+
+          <AssistantChatPanel
+            userId={userId}
+            context={{
+              ...payload,
+              topVenueId: results.venues[0]?.id
+            }}
+            onSuggestedFilters={applySuggestedFilters}
+          />
+        </div>
+      ) : null}
+    </>
+  );
+}

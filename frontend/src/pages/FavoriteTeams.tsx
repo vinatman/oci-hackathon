@@ -1,0 +1,98 @@
+import { useEffect, useMemo, useState } from "react";
+import { api } from "../api/client";
+import { EmptyState } from "../components/EmptyState";
+import { LeagueSelector } from "../components/LeagueSelector";
+import { LoadingState } from "../components/LoadingState";
+import { PageHeader } from "../components/PageHeader";
+import { SportSelector } from "../components/SportSelector";
+import { TeamCard } from "../components/TeamCard";
+import { useDemoUser } from "../hooks/useDemoUser";
+import type { FavoriteTeam, Team } from "../types/domain";
+
+export function FavoriteTeams() {
+  const { userId, refreshUser } = useDemoUser();
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteTeam[]>([]);
+  const [sport, setSport] = useState("");
+  const [league, setLeague] = useState("");
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    if (!userId) {
+      return;
+    }
+    setLoading(true);
+    const [teamResponse, favoriteResponse] = await Promise.all([
+      api.getTeams({ sport, league, q: query }),
+      api.getFavoriteTeams(userId)
+    ]);
+    setTeams(teamResponse.teams);
+    setFavorites(favoriteResponse.favoriteTeams);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    void load();
+  }, [userId, sport, league, query]);
+
+  const favoriteIds = useMemo(() => new Set(favorites.map((favorite) => favorite.teamId)), [favorites]);
+  const selectedTeams = favorites.map((favorite) => favorite.team);
+
+  const add = async (team: Team) => {
+    if (!userId) return;
+    await api.addFavoriteTeam(userId, team.id);
+    await Promise.all([load(), refreshUser()]);
+  };
+
+  const remove = async (team: Team) => {
+    if (!userId) return;
+    await api.removeFavoriteTeam(userId, team.id);
+    await Promise.all([load(), refreshUser()]);
+  };
+
+  return (
+    <>
+      <PageHeader title="Favorite Teams" eyebrow="Team preferences" />
+      <section className="mb-6 grid gap-4 rounded border border-slate-200 bg-white p-4 shadow-soft md:grid-cols-3">
+        <SportSelector value={sport} onChange={setSport} />
+        <LeagueSelector value={league} onChange={setLeague} />
+        <label className="block text-sm font-medium text-ink">
+          Search
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Lakers, Cowboys, Seattle"
+            className="focus-ring mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm"
+          />
+        </label>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-lg font-semibold text-ink">Selected teams</h2>
+        {selectedTeams.length ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {selectedTeams.map((team) => (
+              <TeamCard key={team.id} team={team} selected onRemove={remove} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="No favorites yet" message="Add a team below to personalize venue recommendations." />
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold text-ink">Available teams</h2>
+        {loading ? (
+          <LoadingState label="Loading teams" />
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {teams.map((team) => (
+              <TeamCard key={team.id} team={team} selected={favoriteIds.has(team.id)} onAdd={add} onRemove={remove} />
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  );
+}

@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  displayName        String
+  homeCity           String?
+  isPremium          Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  profile            UserProfile?
+  favoriteTeams      UserFavoriteTeam[]
+  savedVenues        UserSavedVenue[]
+  searchHistory      SearchHistory[]
+}
+
+model UserProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  preferredSports       String[] @default([])
+  preferredLeagues      String[] @default([])
+  preferredVenueTypes   String[] @default([])
+  travelModeEnabled     Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Team {
+  id             String              @id @default(cuid())
+  name           String
+  sport          String
+  league         String
+  city           String
+  country        String
+  logoUrl        String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  homeGames      Game[]              @relation("HomeTeam")
+  awayGames      Game[]              @relation("AwayTeam")
+  favoriteFor    UserFavoriteTeam[]
+  venueAffinity  VenueTeamAffinity[]
+
+  @@unique([name, league])
+}
+
+model UserFavoriteTeam {
+  id        String   @id @default(cuid())
+  userId    String
+  teamId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+}
+
+model Game {
+  id             String   @id @default(cuid())
+  sport          String
+  league         String
+  homeTeamId     String
+  awayTeamId     String
+  startTime      DateTime
+  city           String?
+  state          String?
+  country        String?
+  broadcastInfo  String?
+  source         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  homeTeam       Team     @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam       Team     @relation("AwayTeam", fields: [awayTeamId], references: [id])
+}
+
+model Venue {
+  id             String              @id @default(cuid())
+  name           String
+  address        String
+  city           String
+  state          String
+  country        String
+  latitude       Float
+  longitude      Float
+  websiteUrl     String?
+  venueType      String
+  description    String?
+  rating         Float?
+  source         String
+  isSponsored    Boolean             @default(false)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  savedBy        UserSavedVenue[]
+  teamAffinity   VenueTeamAffinity[]
+}
+
+model UserSavedVenue {
+  id        String   @id @default(cuid())
+  userId    String
+  venueId   String
+  notes     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venue     Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, venueId])
+}
+
+model VenueTeamAffinity {
+  id              String   @id @default(cuid())
+  venueId         String
+  teamId          String
+  confidenceScore Float
+  evidenceText    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  venue           Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  team            Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([venueId, teamId])
+}
+
+model SearchHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  latitude    Float?
+  longitude   Float?
+  city        String?
+  sport       String?
+  league      String?
+  teamId      String?
+  gameId      String?
+  venueTypes  String[] @default([])
+  query       String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AdPlacement {
+  id             String   @id @default(cuid())
+  placementKey   String   @unique
+  title          String
+  description    String
+  imageUrl       String?
+  targetUrl      String?
+  advertiserName String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model PartnerOffer {
+  id          String   @id @default(cuid())
+  partnerType String
+  title       String
+  description String
+  ctaLabel    String
+  targetUrl   String?
+  imageUrl    String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

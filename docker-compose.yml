@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sportsconnect
+      POSTGRES_PASSWORD: sportsconnect
+      POSTGRES_DB: sportsconnect
+    ports:
+      - "5432:5432"
+    volumes:
+      - sportsconnect-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sportsconnect -d sportsconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://sportsconnect:sportsconnect@postgres:5432/sportsconnect?schema=public
+      PORT: 4000
+      ENABLE_WEB_SEARCH_PROVIDER: "false"
+      ENABLE_TICKETS_WIDGET: "true"
+      ENABLE_BETTING_WIDGET: "false"
+      ENABLE_AD_WIDGET: "true"
+      ENABLE_PARTNER_PROMOTIONS: "true"
+    command: sh -c "npx prisma migrate deploy && npm run prisma:seed && node dist/server.js"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    depends_on:
+      - backend
+    environment:
+      BACKEND_UPSTREAM: http://backend:4000
+    ports:
+      - "5173:80"
+
+volumes:
+  sportsconnect-postgres:
